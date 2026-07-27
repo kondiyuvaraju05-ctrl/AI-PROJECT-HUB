@@ -1,0 +1,92 @@
+[
+  {
+    "id": "usr_1785154362983_fvrus",
+    "name": "new_student",
+    "username": "new_student",
+    "email": "new_student@university.edu",
+    "passwordHash": "1191bf2dd55fb1956372fbdcb9ba6ad0e8d26db7eb0eeee0cab52e515751860e",
+    "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=new_student",
+    "provider": "email",
+    "createdAt": "2026-07-27T12:12:42.983Z"
+  },
+  {
+    "id": "usr_1785154413799_p7jh3",
+    "name": "yuva",
+    "username": "yuva",
+    "email": "yuva2832@gmail.com",
+    "passwordHash": "ff10b2bc38f7358e9725ef2ee6e6c5b872ad5099a68034ee62ca0a45e1c1bf27",
+    "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=yuva",
+    "provider": "email",
+    "createdAt": "2026-07-27T12:13:33.799Z"
+  },
+  {
+    "id": "usr_1785154667077_r4cdj",
+    "name": "yuva",
+    "username": "yuva",
+    "email": "yuva283@gmail.com",
+    "passwordHash": "9f4bcad35e1b6b327dafd33e821346f74b20eff5c15fa0143941f86723484ca6",
+    "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=yuva",
+    "provider": "email",
+    "createdAt": "2026-07-27T12:17:47.078Z"
+  },
+  {
+    "id": "usr_1785167249629_qhs8c",
+    "name": "123",
+    "username": "123",
+    "email": "yuva832@gmail.com",
+    "passwordHash": "9b8a0d78fad4511dc6f67b3dee6a00657e0910f5d5eb4792f0c6bd0088248381",
+    "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=123",
+    "provider": "email",
+    "createdAt": "2026-07-27T15:47:29.629Z"
+  },
+  {
+    "id": "usr_1785167645755_kyf0j",
+    "name": "123",
+    "username": "123",
+    "email": "yuva32@gmail.com",
+    "passwordHash": "6f8886b9eab4d7ee6372c73d5327be53ee5e9fb3697d89003fe4a27e76cb6f93",
+    "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=123",
+    "provider": "email",
+    "createdAt": "2026-07-27T15:54:05.755Z"
+  },
+  {
+    "id": "usr_1785167992623_38c1v",
+    "name": "scholar_flow",
+    "username": "scholar_flow",
+    "email": "scholar_flow@university.edu",
+    "passwordHash": "1191bf2dd55fb1956372fbdcb9ba6ad0e8d26db7eb0eeee0cab52e515751860e",
+    "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=scholar_flow",
+    "provider": "email",
+    "createdAt": "2026-07-27T15:59:52.624Z"
+  },
+  {
+    "id": "usr_1785168286907_8rlyt",
+    "name": "12345",
+    "username": "12345",
+    "email": "yuva2@gmail.com",
+    "passwordHash": "7f80c160262429576913b7463b34fb8277184ed0c6aa8ddd4f196de91ecef295",
+    "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=12345",
+    "provider": "email",
+    "createdAt": "2026-07-27T16:04:46.907Z"
+  },
+  {
+    "id": "usr_1785169799549_eahsb",
+    "name": "yuva",
+    "username": "yuva",
+    "email": "yuva@gmail.com",
+    "passwordHash": "40fa869dccfd9def6c20c1e90673e5fb02d0fd62495ed35fc5057a92aa1abfc8",
+    "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=yuva",
+    "provider": "email",
+    "createdAt": "2026-07-27T16:29:59.549Z"
+  },
+  {
+    "id": "usr_1785171625433_1l1k1",
+    "name": "CHANDU",
+    "username": "CHANDU",
+    "email": "kamkolachandrika@gmail.com",
+    "passwordHash": "0d7f70a788eb49fc4ddfed26b8cea0267116a2f09cd6f433096ad10f037b0513",
+    "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=CHANDU",
+    "provider": "email",
+    "createdAt": "2026-07-27T17:00:25.433Z"
+  }
+]

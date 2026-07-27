@@ -1,0 +1,6 @@
+{
+  "name": "AI Project Hub",
+  "description": "Comprehensive AI Project Hub for exploring domains, accessing 12-15 page project documentations, copying code & sections, and asking questions via a project-aware Gemini AI Chatbot.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

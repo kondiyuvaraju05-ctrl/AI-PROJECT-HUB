@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+@theme {
+  --color-sidebar: #2A374E;
+  --color-sidebar-hover: #38475F;
+  --color-app-bg: #F1F2F5;
+  --color-card-bg: #FFFFFF;
+  --color-primary-blue: #1F98DC;
+  --color-secondary-blue: #63A0D9;
+  --color-light-blue: #B8C9DD;
+  --color-text-primary: #12171F;
+  --color-text-secondary: #6A7788;
+  --color-app-border: #E5E7EB;
+  --color-app-success: #22C55E;
+  --color-app-danger: #EF4444;
+}
+
+:root {
+  --sidebar-bg: #2A374E;
+  --sidebar-hover: #38475F;
+  --app-bg: #F1F2F5;
+  --card-bg: #FFFFFF;
+  --primary-blue: #1F98DC;
+  --secondary-blue: #63A0D9;
+  --light-blue: #B8C9DD;
+  --text-primary: #12171F;
+  --text-secondary: #6A7788;
+  --app-border: #E5E7EB;
+  --app-success: #22C55E;
+  --app-danger: #EF4444;
+}
+
+/* Base custom styles mapping */
+body {
+  background-color: #F1F2F5;
+  color: #12171F;
+}
+
+.custom-card {
+  background-color: #FFFFFF;
+  border-color: #E5E7EB;
+}
+
+.custom-sidebar {
+  background-color: #2A374E;
+  color: #FFFFFF;
+}
+
+.custom-sidebar-hover:hover {
+  background-color: #38475F;
+}
+
+.btn-primary-blue {
+  background-color: #1F98DC;
+  color: #FFFFFF;
+}
+
+.btn-primary-blue:hover {
+  background-color: #1a87c5;
+}
+
+.text-brand-primary {
+  color: #12171F;
+}
+
+.text-brand-secondary {
+  color: #6A7788;
+}
+
+.text-brand-blue {
+  color: #1F98DC;
+}
+
+.border-brand {
+  border-color: #E5E7EB;
+}

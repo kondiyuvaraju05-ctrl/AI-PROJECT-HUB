@@ -33,6 +33,9 @@ export default function App() {
     return user ? "workspace" : "landing";
   });
   
+  // Auth initial tab mode: "login" | "signup"
+  const [authInitialMode, setAuthInitialMode] = useState<"login" | "signup">("login");
+
   // Theme mode management (Light / Dark)
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     const saved = localStorage.getItem("ai_hub_theme");
@@ -88,15 +91,25 @@ export default function App() {
         <LoginPage
           onLoginSuccess={handleLoginSuccess}
           onBackToLanding={() => setViewMode("landing")}
+          initialMode={authInitialMode}
         />
       );
     }
 
     return (
       <LandingPage
-        onSignInClick={() => setViewMode("auth")}
-        onCreateAccountClick={() => setViewMode("auth")}
-        onEnterWorkspace={() => setViewMode("auth")}
+        onSignInClick={() => {
+          setAuthInitialMode("login");
+          setViewMode("auth");
+        }}
+        onCreateAccountClick={() => {
+          setAuthInitialMode("signup");
+          setViewMode("auth");
+        }}
+        onEnterWorkspace={() => {
+          setAuthInitialMode("login");
+          setViewMode("auth");
+        }}
       />
     );
   }

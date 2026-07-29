@@ -19,6 +19,7 @@ import {
 interface LoginPageProps {
   onLoginSuccess: (user: User) => void;
   onBackToLanding?: () => void;
+  initialMode?: "login" | "signup";
 }
 
 interface ToastMessage {
@@ -36,9 +37,13 @@ interface AuthModalState {
   emailPrefill?: string;
 }
 
-export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onBackToLanding }) => {
+export const LoginPage: React.FC<LoginPageProps> = ({ 
+  onLoginSuccess, 
+  onBackToLanding,
+  initialMode = "login" 
+}) => {
   // Navigation mode: "login" or "signup"
-  const [authMode, setAuthMode] = useState<"login" | "signup">("login");
+  const [authMode, setAuthMode] = useState<"login" | "signup">(initialMode);
 
   // Form Fields
   const [username, setUsername] = useState("");

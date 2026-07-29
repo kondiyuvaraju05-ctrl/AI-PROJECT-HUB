@@ -221,12 +221,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
           {/* Right Side Auth Actions */}
           <div className="hidden md:flex items-center gap-3">
+            {/* Triggers direct navigation to the Sign In tab of the authentication screen */}
             <button
               onClick={onSignInClick}
               className="px-4 py-2 rounded-lg text-xs font-bold tracking-wider uppercase border border-white/20 text-white bg-white/5 hover:bg-white/10 hover:border-white/40 transition-all backdrop-blur-sm"
             >
               SIGN IN
             </button>
+            {/* Triggers direct navigation to the Register tab of the authentication screen */}
             <button
               onClick={onCreateAccountClick}
               className="px-5 py-2 rounded-lg text-xs font-bold tracking-wider uppercase bg-white text-slate-950 hover:bg-slate-200 transition-all shadow-md hover:shadow-lg hover:shadow-white/10 active:scale-95"

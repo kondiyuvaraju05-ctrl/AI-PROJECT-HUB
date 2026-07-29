@@ -19,6 +19,7 @@ import {
 interface LoginPageProps {
   onLoginSuccess: (user: User) => void;
   onBackToLanding?: () => void;
+  /** Initial mode for authentication form: "login" (Sign In) or "signup" (Register) */
   initialMode?: "login" | "signup";
 }
 
@@ -42,7 +43,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
   onBackToLanding,
   initialMode = "login" 
 }) => {
-  // Navigation mode: "login" or "signup"
+  // Navigation mode state initialized directly to initialMode ("login" for Sign In tab, "signup" for Register tab)
   const [authMode, setAuthMode] = useState<"login" | "signup">(initialMode);
 
   // Form Fields

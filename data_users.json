@@ -88,5 +88,15 @@
     "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=CHANDU",
     "provider": "email",
     "createdAt": "2026-07-27T17:00:25.433Z"
+  },
+  {
+    "id": "google_1785344837168",
+    "name": "Google User",
+    "username": "user.scholar",
+    "email": "user.scholar@gmail.com",
+    "passwordHash": "oauth_google_protected",
+    "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Google%20User",
+    "provider": "google",
+    "createdAt": "2026-07-29T17:07:17.168Z"
   }
 ]

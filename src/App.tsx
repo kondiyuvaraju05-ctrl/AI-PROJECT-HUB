@@ -28,12 +28,12 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showGlobalDocReader, setShowGlobalDocReader] = useState(false);
   
-  // Navigation view state: "landing" | "auth" | "workspace"
+  // Navigation view state: "landing" (marketing overview) | "auth" (login/register screen) | "workspace" (active dashboard)
   const [viewMode, setViewMode] = useState<"landing" | "auth" | "workspace">(() => {
     return user ? "workspace" : "landing";
   });
   
-  // Auth initial tab mode: "login" | "signup"
+  // Auth initial tab mode: "login" (opens Sign In tab) | "signup" (opens Create Account tab)
   const [authInitialMode, setAuthInitialMode] = useState<"login" | "signup">("login");
 
   // Theme mode management (Light / Dark)
@@ -52,12 +52,14 @@ export default function App() {
     localStorage.setItem("ai_hub_theme", theme);
   }, [theme]);
 
+  // Handle successful user authentication and redirect to main workspace dashboard
   const handleLoginSuccess = (newUser: User) => {
     setUser(newUser);
     localStorage.setItem("ai_hub_user", JSON.stringify(newUser));
     setViewMode("workspace");
   };
 
+  // Handle user logout and redirect back to the product landing page
   const handleLogout = () => {
     setUser(null);
     localStorage.removeItem("ai_hub_user");
@@ -84,29 +86,34 @@ export default function App() {
     setViewMode("workspace");
   };
 
-  // If user is not logged in
+  // Render logic for unauthenticated visitors
   if (!user) {
+    // Render Authentication Screen (Login or Registration)
     if (viewMode === "auth") {
       return (
         <LoginPage
           onLoginSuccess={handleLoginSuccess}
           onBackToLanding={() => setViewMode("landing")}
-          initialMode={authInitialMode}
+          initialMode={authInitialMode} /* Passes "login" or "signup" depending on which button was clicked */
         />
       );
     }
 
+    // Default: Render Enterprise SaaS Landing Page
     return (
       <LandingPage
         onSignInClick={() => {
+          // When clicking "SIGN IN", open LoginPage directly on the Sign In tab
           setAuthInitialMode("login");
           setViewMode("auth");
         }}
         onCreateAccountClick={() => {
+          // When clicking "CREATE ACCOUNT" or "Get Started Free", open LoginPage directly on the Register tab
           setAuthInitialMode("signup");
           setViewMode("auth");
         }}
         onEnterWorkspace={() => {
+          // When clicking "Workspace Login", open LoginPage directly on the Sign In tab
           setAuthInitialMode("login");
           setViewMode("auth");
         }}

@@ -18,6 +18,7 @@ import {
 
 interface LoginPageProps {
   onLoginSuccess: (user: User) => void;
+  onBackToLanding?: () => void;
 }
 
 interface ToastMessage {
@@ -35,7 +36,7 @@ interface AuthModalState {
   emailPrefill?: string;
 }
 
-export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
+export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onBackToLanding }) => {
   // Navigation mode: "login" or "signup"
   const [authMode, setAuthMode] = useState<"login" | "signup">("login");
 
@@ -260,6 +261,18 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
 
   return (
     <div className="min-h-screen bg-[#F1F2F5] flex flex-col justify-center py-10 sm:px-6 lg:px-8 relative overflow-hidden font-sans">
+      
+      {/* Top Left Navigation Back to Landing Page */}
+      {onBackToLanding && (
+        <div className="absolute top-5 left-5 z-40">
+          <button
+            onClick={onBackToLanding}
+            className="px-4 py-2 rounded-xl bg-[#2A374E] text-[#B8C9DD] hover:text-white border border-[#38475F] text-xs font-bold transition-all shadow-md flex items-center gap-2"
+          >
+            <span>← Back to Landing Page</span>
+          </button>
+        </div>
+      )}
       
       {/* Floating Toast Notification Container */}
       <div className="fixed top-5 right-5 z-50 flex flex-col gap-2.5 max-w-sm w-full pointer-events-none">

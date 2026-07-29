@@ -8,6 +8,7 @@ import { Dashboard } from "./components/Dashboard";
 import { DomainPage } from "./components/DomainPage";
 import { ProjectDetailsPage } from "./components/ProjectDetailsPage";
 import { DocReaderModal } from "./components/DocReaderModal";
+import { LandingPage } from "./components/LandingPage";
 
 export default function App() {
   const [user, setUser] = useState<User | null>(() => {
@@ -26,6 +27,11 @@ export default function App() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showGlobalDocReader, setShowGlobalDocReader] = useState(false);
+  
+  // Navigation view state: "landing" | "auth" | "workspace"
+  const [viewMode, setViewMode] = useState<"landing" | "auth" | "workspace">(() => {
+    return user ? "workspace" : "landing";
+  });
   
   // Theme mode management (Light / Dark)
   const [theme, setTheme] = useState<"light" | "dark">(() => {
@@ -46,6 +52,7 @@ export default function App() {
   const handleLoginSuccess = (newUser: User) => {
     setUser(newUser);
     localStorage.setItem("ai_hub_user", JSON.stringify(newUser));
+    setViewMode("workspace");
   };
 
   const handleLogout = () => {
@@ -53,28 +60,59 @@ export default function App() {
     localStorage.removeItem("ai_hub_user");
     setSelectedDomain(null);
     setSelectedProject(null);
+    setViewMode("landing");
   };
 
   const handleNavigateHome = () => {
     setSelectedDomain(null);
     setSelectedProject(null);
     setShowGlobalDocReader(false);
+    setViewMode("workspace");
   };
 
   const handleSelectDomain = (domain: Domain) => {
     setSelectedDomain(domain);
     setSelectedProject(null);
+    setViewMode("workspace");
   };
 
   const handleSelectProject = (project: Project) => {
     setSelectedProject(project);
+    setViewMode("workspace");
   };
 
-  // If user is logged out, show Login Page
+  // If user is not logged in
   if (!user) {
-    return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+    if (viewMode === "auth") {
+      return (
+        <LoginPage
+          onLoginSuccess={handleLoginSuccess}
+          onBackToLanding={() => setViewMode("landing")}
+        />
+      );
+    }
+
+    return (
+      <LandingPage
+        onSignInClick={() => setViewMode("auth")}
+        onCreateAccountClick={() => setViewMode("auth")}
+        onEnterWorkspace={() => setViewMode("auth")}
+      />
+    );
   }
 
+  // If user is logged in but chooses to inspect the Landing Page
+  if (viewMode === "landing") {
+    return (
+      <LandingPage
+        onSignInClick={() => setViewMode("workspace")}
+        onCreateAccountClick={() => setViewMode("workspace")}
+        onEnterWorkspace={() => setViewMode("workspace")}
+      />
+    );
+  }
+
+  // Active Workspace View
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 selection:bg-blue-500 selection:text-white transition-colors">
       
@@ -83,6 +121,7 @@ export default function App() {
         user={user}
         onLogout={handleLogout}
         onNavigateHome={handleNavigateHome}
+        onNavigateLanding={() => setViewMode("landing")}
         activeDomainName={selectedDomain?.name}
         activeProjectName={selectedProject?.name}
         onOpenDocReader={selectedProject ? () => setShowGlobalDocReader(true) : undefined}

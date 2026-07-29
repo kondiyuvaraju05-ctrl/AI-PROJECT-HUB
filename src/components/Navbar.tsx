@@ -20,6 +20,7 @@ interface NavbarProps {
   user: User | null;
   onLogout: () => void;
   onNavigateHome: () => void;
+  onNavigateLanding?: () => void;
   activeDomainName?: string;
   activeProjectName?: string;
   onOpenDocReader?: () => void;
@@ -31,6 +32,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   user,
   onLogout,
   onNavigateHome,
+  onNavigateLanding,
   activeDomainName,
   activeProjectName,
   onOpenDocReader,
@@ -109,6 +111,15 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Actions & User Profile */}
           <div className="flex items-center gap-2.5 sm:gap-3">
+
+            {onNavigateLanding && (
+              <button
+                onClick={onNavigateLanding}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-lg transition-all cursor-pointer"
+              >
+                <span>⚡ Landing Page</span>
+              </button>
+            )}
 
             {activeProjectName && onOpenDocReader && (
               <button

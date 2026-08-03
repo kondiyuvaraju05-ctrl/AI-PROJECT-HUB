@@ -19,7 +19,9 @@ interface StoredUser {
   passwordHash: string;
   avatar: string;
   provider: "email" | "google";
+  googleId?: string;
   createdAt: string;
+  lastLogin?: string;
 }
 
 const __filename = fileURLToPath(import.meta.url);
@@ -33,7 +35,14 @@ const loadUsersFromFile = (): Map<string, StoredUser> => {
     if (fs.existsSync(DB_FILE)) {
       const data = fs.readFileSync(DB_FILE, "utf-8");
       const list: StoredUser[] = JSON.parse(data);
-      list.forEach((u) => map.set(u.email.toLowerCase(), u));
+      list.forEach((u) => {
+        if (u.email) {
+          map.set(u.email.toLowerCase().trim(), {
+            ...u,
+            email: u.email.toLowerCase().trim(),
+          });
+        }
+      });
     }
   } catch (err) {
     console.error("Error loading users database:", err);
@@ -51,10 +60,20 @@ const saveUsersToFile = (map: Map<string, StoredUser>) => {
 };
 
 const usersDb: Map<string, StoredUser> = loadUsersFromFile();
+const otpDb = new Map<string, { code: string; expiresAt: number }>();
 
 // Helper to hash passwords securely
 const hashPassword = (password: string): string => {
   return crypto.createHash("sha256").update(password + "_ai_hub_salt").digest("hex");
+};
+
+// Helper to verify passwords supporting both salted and unsalted legacy hashes
+const verifyPassword = (password: string, storedHash: string): boolean => {
+  const saltedHash = crypto.createHash("sha256").update(password + "_ai_hub_salt").digest("hex");
+  if (saltedHash === storedHash) return true;
+  const rawHash = crypto.createHash("sha256").update(password).digest("hex");
+  if (rawHash === storedHash) return true;
+  return false;
 };
 
 async function startServer() {
@@ -107,10 +126,10 @@ async function startServer() {
 
       const lowerEmail = email.toLowerCase().trim();
       
-      // Check whether email already exists in database
+      // Check whether email already exists in database BEFORE creating user
       if (usersDb.has(lowerEmail)) {
-        res.status(400).json({
-          error: "This email is already registered. Please log in to continue.",
+        res.status(409).json({
+          error: "Email already exists. Please log in.",
           alreadyRegistered: true,
         });
         return;
@@ -120,6 +139,7 @@ async function startServer() {
       const displayName = username && username.trim() 
         ? username.trim() 
         : lowerEmail.split("@")[0].charAt(0).toUpperCase() + lowerEmail.split("@")[0].slice(1);
+      const nowIso = new Date().toISOString();
 
       const newUser: StoredUser = {
         id: userId,
@@ -129,7 +149,8 @@ async function startServer() {
         passwordHash: hashPassword(password),
         avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(displayName)}`,
         provider: "email",
-        createdAt: new Date().toISOString(),
+        createdAt: nowIso,
+        lastLogin: nowIso,
       };
 
       usersDb.set(lowerEmail, newUser);
@@ -145,6 +166,8 @@ async function startServer() {
           email: newUser.email,
           avatar: newUser.avatar,
           provider: newUser.provider,
+          createdAt: newUser.createdAt,
+          lastLogin: newUser.lastLogin,
         },
       });
     } catch (err: any) {
@@ -175,26 +198,29 @@ async function startServer() {
       // 1. Check whether entered email exists in database
       if (!existingUser) {
         res.status(404).json({
-          error: "No account found with this email address.",
-          message: "Please register first to create an account.",
+          error: "Account not found. Please register first.",
+          message: "Account not found. Please register first.",
           emailNotFound: true,
         });
         return;
       }
 
       // 2. If email exists, verify password
-      const inputHash = hashPassword(password);
-      if (existingUser.passwordHash !== inputHash) {
+      const isPasswordValid = verifyPassword(password, existingUser.passwordHash);
+      if (!isPasswordValid) {
         res.status(401).json({
-          error: "Invalid email address or password.",
-          message: "Invalid email address or password.",
+          error: "Invalid email or password. Please try again.",
+          message: "Invalid email or password. Please try again.",
           incorrectPassword: true,
         });
         return;
       }
 
-      // 3. If correct: Log user in successfully -> Redirect to Dashboard
-      res.json({
+      // 3. Update last login timestamp and return user
+      existingUser.lastLogin = new Date().toISOString();
+      saveUsersToFile(usersDb);
+
+      res.status(200).json({
         message: "Login successful!",
         token: `jwt_sim_${existingUser.id}`,
         user: {
@@ -204,6 +230,9 @@ async function startServer() {
           email: existingUser.email,
           avatar: existingUser.avatar,
           provider: existingUser.provider,
+          googleId: existingUser.googleId,
+          createdAt: existingUser.createdAt,
+          lastLogin: existingUser.lastLogin,
         },
       });
     } catch (err: any) {
@@ -212,32 +241,104 @@ async function startServer() {
     }
   });
 
-  // Google OAuth Authentication Endpoint
-  app.post("/api/auth/google", (req, res) => {
+  // Request OTP Code Endpoint
+  app.post("/api/auth/otp/request", (req, res) => {
     try {
-      const { email, name, avatar } = req.body;
+      const { email } = req.body;
 
-      const googleEmail = (email || "user@google.com").toLowerCase().trim();
-      const displayName = name || googleEmail.split("@")[0].charAt(0).toUpperCase() + googleEmail.split("@")[0].slice(1);
+      if (!email) {
+        res.status(400).json({ error: "Email address is required." });
+        return;
+      }
 
-      let existingUser = usersDb.get(googleEmail);
+      const lowerEmail = email.toLowerCase().trim();
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(lowerEmail)) {
+        res.status(400).json({ error: "Please enter a valid email address." });
+        return;
+      }
+
+      // Generate secure 6-digit OTP code
+      const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+      const expiresAt = Date.now() + 5 * 60 * 1000; // 5 minutes validity
+
+      otpDb.set(lowerEmail, { code: otpCode, expiresAt });
+      console.log(`[OTP GENERATED] Email: ${lowerEmail} | OTP Code: ${otpCode}`);
+
+      res.status(200).json({
+        message: "OTP sent successfully to your email address.",
+        otpSimulatedCode: otpCode,
+        email: lowerEmail,
+      });
+    } catch (err: any) {
+      console.error("OTP Request Error:", err);
+      res.status(500).json({ error: "Failed to send OTP code. Please try again." });
+    }
+  });
+
+  // Verify OTP Code & Login / Auto-Register Endpoint
+  app.post("/api/auth/otp/verify", (req, res) => {
+    try {
+      const { email, otpCode } = req.body;
+
+      if (!email || !otpCode) {
+        res.status(400).json({ error: "Email address and 6-digit OTP code are required." });
+        return;
+      }
+
+      const lowerEmail = email.toLowerCase().trim();
+      const storedOtp = otpDb.get(lowerEmail);
+
+      if (!storedOtp) {
+        res.status(400).json({ error: "No OTP code requested. Please request a new OTP code." });
+        return;
+      }
+
+      if (Date.now() > storedOtp.expiresAt) {
+        otpDb.delete(lowerEmail);
+        res.status(400).json({ error: "OTP code has expired. Please request a new OTP code." });
+        return;
+      }
+
+      if (storedOtp.code !== otpCode.trim()) {
+        res.status(400).json({ error: "Invalid OTP code. Please check and try again." });
+        return;
+      }
+
+      // Clear spent OTP
+      otpDb.delete(lowerEmail);
+
+      // Check if user already exists
+      let existingUser = usersDb.get(lowerEmail);
+      let statusCode = 200;
+      const nowIso = new Date().toISOString();
+
       if (!existingUser) {
+        // Auto-register user logged in via OTP
+        statusCode = 201;
+        const userId = `usr_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+        const displayName = lowerEmail.split("@")[0].charAt(0).toUpperCase() + lowerEmail.split("@")[0].slice(1);
+        
         existingUser = {
-          id: `google_${Date.now()}`,
+          id: userId,
           name: displayName,
-          username: googleEmail.split("@")[0],
-          email: googleEmail,
-          passwordHash: "oauth_google_protected",
-          avatar: avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(displayName)}`,
-          provider: "google",
-          createdAt: new Date().toISOString(),
+          username: lowerEmail.split("@")[0],
+          email: lowerEmail,
+          passwordHash: hashPassword(Math.random().toString(36)),
+          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(displayName)}`,
+          provider: "email",
+          createdAt: nowIso,
+          lastLogin: nowIso,
         };
-        usersDb.set(googleEmail, existingUser);
+        usersDb.set(lowerEmail, existingUser);
+        saveUsersToFile(usersDb);
+      } else {
+        existingUser.lastLogin = nowIso;
         saveUsersToFile(usersDb);
       }
 
-      res.json({
-        message: "Google authentication successful!",
+      res.status(statusCode).json({
+        message: statusCode === 201 ? "Account registered & logged in via OTP!" : "OTP login successful!",
         token: `jwt_sim_${existingUser.id}`,
         user: {
           id: existingUser.id,
@@ -245,13 +346,131 @@ async function startServer() {
           username: existingUser.username,
           email: existingUser.email,
           avatar: existingUser.avatar,
+          provider: existingUser.provider,
+          createdAt: existingUser.createdAt,
+          lastLogin: existingUser.lastLogin,
+        },
+      });
+    } catch (err: any) {
+      console.error("OTP Verification Error:", err);
+      res.status(500).json({ error: "Failed to verify OTP code." });
+    }
+  });
+
+  // Google OAuth Authentication Endpoint
+  app.post("/api/auth/google", (req, res) => {
+    try {
+      const { email, name, avatar, googleId } = req.body;
+
+      if (!email) {
+        res.status(400).json({ error: "Google email is required." });
+        return;
+      }
+
+      const googleEmail = email.toLowerCase().trim();
+      const displayName = name || googleEmail.split("@")[0].charAt(0).toUpperCase() + googleEmail.split("@")[0].slice(1);
+      const nowIso = new Date().toISOString();
+
+      let existingUser = usersDb.get(googleEmail);
+      let statusCode = 200;
+
+      if (existingUser) {
+        // Authenticate existing account without duplicating
+        existingUser.lastLogin = nowIso;
+        if (googleId && !existingUser.googleId) {
+          existingUser.googleId = googleId;
+        }
+        if (avatar && (existingUser.avatar.includes("dicebear") || !existingUser.avatar)) {
+          existingUser.avatar = avatar;
+        }
+        usersDb.set(googleEmail, existingUser);
+        saveUsersToFile(usersDb);
+      } else {
+        // Automatically create new user with provider = "google"
+        statusCode = 201;
+        existingUser = {
+          id: `google_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+          name: displayName,
+          username: googleEmail.split("@")[0],
+          email: googleEmail,
+          passwordHash: "oauth_google_protected",
+          avatar: avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(displayName)}`,
           provider: "google",
+          googleId: googleId || `gid_${Date.now()}`,
+          createdAt: nowIso,
+          lastLogin: nowIso,
+        };
+        usersDb.set(googleEmail, existingUser);
+        saveUsersToFile(usersDb);
+      }
+
+      res.status(statusCode).json({
+        message: statusCode === 201 ? "Google account registered and logged in!" : "Google login successful!",
+        token: `jwt_sim_${existingUser.id}`,
+        user: {
+          id: existingUser.id,
+          name: existingUser.name,
+          username: existingUser.username,
+          email: existingUser.email,
+          avatar: existingUser.avatar,
+          provider: existingUser.provider,
+          googleId: existingUser.googleId,
+          createdAt: existingUser.createdAt,
+          lastLogin: existingUser.lastLogin,
         },
       });
     } catch (err: any) {
       console.error("Google Auth Error:", err);
       res.status(500).json({ error: "Server error during Google sign-in." });
     }
+  });
+
+  // Current User Session Check Endpoint
+  app.get("/api/auth/me", (req, res) => {
+    try {
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        res.status(401).json({ error: "Unauthenticated." });
+        return;
+      }
+
+      const token = authHeader.split(" ")[1];
+      const userId = token.replace("jwt_sim_", "");
+
+      let foundUser: StoredUser | undefined;
+      for (const u of usersDb.values()) {
+        if (u.id === userId) {
+          foundUser = u;
+          break;
+        }
+      }
+
+      if (!foundUser) {
+        res.status(401).json({ error: "Session invalid or expired." });
+        return;
+      }
+
+      res.json({
+        user: {
+          id: foundUser.id,
+          name: foundUser.name,
+          username: foundUser.username,
+          email: foundUser.email,
+          avatar: foundUser.avatar,
+          provider: foundUser.provider,
+          googleId: foundUser.googleId,
+          createdAt: foundUser.createdAt,
+          lastLogin: foundUser.lastLogin,
+        },
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: "Server error verifying session." });
+    }
+  });
+
+  // User Logout Endpoint
+  app.post("/api/auth/logout", (_req, res) => {
+    res.json({ message: "Logged out successfully." });
   });
 
   // Helper to safely execute Gemini requests with fallback models

@@ -15,9 +15,11 @@
     "username": "yuva",
     "email": "yuva2832@gmail.com",
     "passwordHash": "ff10b2bc38f7358e9725ef2ee6e6c5b872ad5099a68034ee62ca0a45e1c1bf27",
-    "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=yuva",
+    "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Yuva",
     "provider": "email",
-    "createdAt": "2026-07-27T12:13:33.799Z"
+    "createdAt": "2026-07-27T12:13:33.799Z",
+    "lastLogin": "2026-08-03T16:29:04.709Z",
+    "googleId": "gid_1785602529700_myb0"
   },
   {
     "id": "usr_1785154667077_r4cdj",
@@ -67,7 +69,8 @@
     "passwordHash": "7f80c160262429576913b7463b34fb8277184ed0c6aa8ddd4f196de91ecef295",
     "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=12345",
     "provider": "email",
-    "createdAt": "2026-07-27T16:04:46.907Z"
+    "createdAt": "2026-07-27T16:04:46.907Z",
+    "lastLogin": "2026-08-03T16:26:56.340Z"
   },
   {
     "id": "usr_1785169799549_eahsb",
@@ -95,8 +98,133 @@
     "username": "user.scholar",
     "email": "user.scholar@gmail.com",
     "passwordHash": "oauth_google_protected",
-    "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Google%20User",
+    "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Scholar%20User",
     "provider": "google",
-    "createdAt": "2026-07-29T17:07:17.168Z"
+    "createdAt": "2026-07-29T17:07:17.168Z",
+    "lastLogin": "2026-08-01T16:42:34.492Z",
+    "googleId": "gid_1785602554490_jhyk"
+  },
+  {
+    "id": "usr_1785602376613_4tczy",
+    "name": "TestUser",
+    "username": "TestUser",
+    "email": "test_user_1785602376607@example.com",
+    "passwordHash": "2f6dac519f9c3c94440c615025ab115e9baded0871fcec27e17d91e310791769",
+    "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=TestUser",
+    "provider": "email",
+    "createdAt": "2026-08-01T16:39:36.613Z"
+  },
+  {
+    "id": "usr_1785602392948_731m4",
+    "name": "TestUser",
+    "username": "TestUser",
+    "email": "test_user_1785602392917@example.com",
+    "passwordHash": "2f6dac519f9c3c94440c615025ab115e9baded0871fcec27e17d91e310791769",
+    "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=TestUser",
+    "provider": "email",
+    "createdAt": "2026-08-01T16:39:52.948Z",
+    "lastLogin": "2026-08-01T16:39:52.968Z"
+  },
+  {
+    "id": "google_1785602392976_v5e9h",
+    "name": "Google Scholar",
+    "username": "guser_1785602392975",
+    "email": "guser_1785602392975@gmail.com",
+    "passwordHash": "oauth_google_protected",
+    "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Google%20Scholar",
+    "provider": "google",
+    "googleId": "gid_123456789",
+    "createdAt": "2026-08-01T16:39:52.976Z",
+    "lastLogin": "2026-08-01T16:39:52.980Z"
+  },
+  {
+    "id": "usr_1785602974799_wn6j0",
+    "name": "TestUser",
+    "username": "TestUser",
+    "email": "test_user_1785602974792@example.com",
+    "passwordHash": "2f6dac519f9c3c94440c615025ab115e9baded0871fcec27e17d91e310791769",
+    "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=TestUser",
+    "provider": "email",
+    "createdAt": "2026-08-01T16:49:34.799Z",
+    "lastLogin": "2026-08-01T16:49:34.809Z"
+  },
+  {
+    "id": "google_1785602974814_9zrer",
+    "name": "Google Scholar",
+    "username": "guser_1785602974813",
+    "email": "guser_1785602974813@gmail.com",
+    "passwordHash": "oauth_google_protected",
+    "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Google%20Scholar",
+    "provider": "google",
+    "googleId": "gid_123456789",
+    "createdAt": "2026-08-01T16:49:34.814Z",
+    "lastLogin": "2026-08-01T16:49:34.819Z"
+  },
+  {
+    "id": "usr_1785605310285_yehvh",
+    "name": "TestUser",
+    "username": "TestUser",
+    "email": "test_user_1785605310250@example.com",
+    "passwordHash": "2f6dac519f9c3c94440c615025ab115e9baded0871fcec27e17d91e310791769",
+    "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=TestUser",
+    "provider": "email",
+    "createdAt": "2026-08-01T17:28:30.285Z",
+    "lastLogin": "2026-08-01T17:28:30.330Z"
+  },
+  {
+    "id": "google_1785605310359_db6nk",
+    "name": "Google Scholar",
+    "username": "guser_1785605310348",
+    "email": "guser_1785605310348@gmail.com",
+    "passwordHash": "oauth_google_protected",
+    "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Google%20Scholar",
+    "provider": "google",
+    "googleId": "gid_123456789",
+    "createdAt": "2026-08-01T17:28:30.359Z",
+    "lastLogin": "2026-08-01T17:28:30.370Z"
+  },
+  {
+    "id": "usr_1785773677899_22h23",
+    "name": "authtester",
+    "username": "authtester",
+    "email": "authtest_1785773677883@example.com",
+    "passwordHash": "1560a4385561cacaef12e4f6d7c5a52a1b6973c70fa083c379f728f9de50aeea",
+    "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=authtester",
+    "provider": "email",
+    "createdAt": "2026-08-03T16:14:37.899Z",
+    "lastLogin": "2026-08-03T16:14:37.909Z"
+  },
+  {
+    "id": "usr_1785773788818_k5akf",
+    "name": "authtester",
+    "username": "authtester",
+    "email": "authtest_1785773788679@example.com",
+    "passwordHash": "1560a4385561cacaef12e4f6d7c5a52a1b6973c70fa083c379f728f9de50aeea",
+    "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=authtester",
+    "provider": "email",
+    "createdAt": "2026-08-03T16:16:28.818Z",
+    "lastLogin": "2026-08-03T16:16:28.841Z"
+  },
+  {
+    "id": "usr_1785774351927_9mw2a",
+    "name": "Otptest_1785774351813",
+    "username": "otptest_1785774351813",
+    "email": "otptest_1785774351813@example.com",
+    "passwordHash": "e5fc0762242fd148a7fe287c6986062a1eb0988d677da2b7a4e0ba4b0808a8b1",
+    "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Otptest_1785774351813",
+    "provider": "email",
+    "createdAt": "2026-08-03T16:25:51.927Z",
+    "lastLogin": "2026-08-03T16:25:51.938Z"
+  },
+  {
+    "id": "usr_1785774517924_zub1j",
+    "name": "Otponly_1785774517858",
+    "username": "otponly_1785774517858",
+    "email": "otponly_1785774517858@example.com",
+    "passwordHash": "76758b28e0a7d5cb0d347c27c2a935072d0104f64bd47121d3c125a2340f99ad",
+    "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Otponly_1785774517858",
+    "provider": "email",
+    "createdAt": "2026-08-03T16:28:37.924Z",
+    "lastLogin": "2026-08-03T16:28:37.924Z"
   }
 ]

@@ -71,6 +71,10 @@ export interface User {
   email: string;
   avatar: string;
   provider: "email" | "google" | "github" | "guest";
+  googleId?: string;
+  createdAt?: string;
+  lastLogin?: string;
+  token?: string;
 }
 
 export interface ChatMessage {

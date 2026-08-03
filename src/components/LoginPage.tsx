@@ -3,24 +3,19 @@ import { User } from "../types";
 import { 
   Bot, 
   Mail, 
-  Lock, 
-  User as UserIcon, 
-  Eye, 
-  EyeOff, 
   CheckCircle2, 
   AlertCircle, 
-  ShieldCheck, 
-  ArrowRight,
   X,
-  UserPlus,
-  LogIn
+  LogIn,
+  KeyRound,
+  Send,
+  Sparkles
 } from "lucide-react";
 
 interface LoginPageProps {
   onLoginSuccess: (user: User) => void;
   onBackToLanding?: () => void;
-  /** Initial mode for authentication form: "login" (Sign In) or "signup" (Register) */
-  initialMode?: "login" | "signup";
+  initialMode?: string;
 }
 
 interface ToastMessage {
@@ -30,42 +25,18 @@ interface ToastMessage {
   description: string;
 }
 
-interface AuthModalState {
-  isOpen: boolean;
-  type: "email_not_found" | "already_registered" | "invalid_password" | "success_register";
-  title: string;
-  message: string;
-  emailPrefill?: string;
-}
-
 export const LoginPage: React.FC<LoginPageProps> = ({ 
   onLoginSuccess, 
-  onBackToLanding,
-  initialMode = "login" 
+  onBackToLanding 
 }) => {
-  // Navigation mode state initialized directly to initialMode ("login" for Sign In tab, "signup" for Register tab)
-  const [authMode, setAuthMode] = useState<"login" | "signup">(initialMode);
-
-  // Form Fields
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-
-  // Password Visibility Toggles
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-  // Loading & Popup Modal States
-  const [isLoading, setIsLoading] = useState(false);
+  // OTP Auth States
+  const [otpEmail, setOtpEmail] = useState("");
+  const [otpCode, setOtpCode] = useState("");
+  const [otpStep, setOtpStep] = useState<"request" | "verify">("request");
+  const [simulatedOtpCode, setSimulatedOtpCode] = useState<string | null>(null);
+  const [isOtpLoading, setIsOtpLoading] = useState(false);
   const [formError, setFormError] = useState("");
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
-  const [modalState, setModalState] = useState<AuthModalState>({
-    isOpen: false,
-    type: "email_not_found",
-    title: "",
-    message: "",
-  });
 
   const addToast = (type: "success" | "error", title: string, description: string) => {
     const id = `toast-${Date.now()}`;
@@ -84,184 +55,84 @@ export const LoginPage: React.FC<LoginPageProps> = ({
     return re.test(val.trim());
   };
 
-  // Handle Login Submission
-  const handleLoginSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Handle OTP Generation Request
+  const handleRequestOtp = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setFormError("");
 
-    if (!email.trim() || !validateEmail(email)) {
+    const targetEmail = otpEmail.trim();
+    if (!targetEmail || !validateEmail(targetEmail)) {
       const err = "Please enter a valid email address.";
       setFormError(err);
       addToast("error", "Invalid Email Address", err);
       return;
     }
 
-    if (!password) {
-      const err = "Please enter your password.";
-      setFormError(err);
-      addToast("error", "Password Required", err);
-      return;
-    }
-
-    setIsLoading(true);
+    setIsOtpLoading(true);
 
     try {
-      const res = await fetch("/api/auth/login", {
+      const res = await fetch("/api/auth/otp/request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), password }),
+        body: JSON.stringify({ email: targetEmail }),
       });
 
       const data = await res.json();
+      setIsOtpLoading(false);
 
       if (!res.ok) {
-        setIsLoading(false);
-
-        // Scenario 1: Email does NOT exist in database -> Show Popup Modal
-        if (res.status === 404 || data.emailNotFound) {
-          setModalState({
-            isOpen: true,
-            type: "email_not_found",
-            title: "No account found with this email address.",
-            message: "Please register first to create an account.",
-            emailPrefill: email.trim(),
-          });
-          return;
-        }
-
-        // Scenario 2: Password incorrect
-        setModalState({
-          isOpen: true,
-          type: "invalid_password",
-          title: "Invalid email address or password.",
-          message: "Please check your password and try again.",
-        });
-        setFormError("Invalid email address or password.");
+        setFormError(data.error || "Failed to send OTP code.");
+        addToast("error", "OTP Request Failed", data.error || "Failed to send OTP code.");
         return;
       }
 
-      // Successful Login -> Redirect directly to Dashboard
-      addToast("success", "Login Successful!", `Welcome back, ${data.user.name}! Redirecting to Dashboard...`);
-      setTimeout(() => {
-        setIsLoading(false);
-        onLoginSuccess(data.user);
-      }, 500);
-
+      setOtpStep("verify");
+      setSimulatedOtpCode(data.otpSimulatedCode || null);
+      addToast("success", "OTP Code Sent!", `6-digit verification code sent to ${targetEmail}`);
     } catch (err: any) {
-      setIsLoading(false);
-      setFormError("Server error during login. Please try again.");
+      setIsOtpLoading(false);
+      setFormError("Server error requesting OTP code. Please try again.");
     }
   };
 
-  // Handle Registration Submission
-  const handleRegisterSubmit = async (e: React.FormEvent) => {
+  // Handle OTP Verification & Login
+  const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError("");
 
-    if (!email.trim() || !validateEmail(email)) {
-      const err = "Please enter a valid email address.";
+    if (!otpCode.trim() || otpCode.trim().length !== 6) {
+      const err = "Please enter the 6-digit OTP code.";
       setFormError(err);
-      addToast("error", "Invalid Email Address", err);
+      addToast("error", "OTP Code Required", err);
       return;
     }
 
-    if (!password) {
-      const err = "Password is required.";
-      setFormError(err);
-      addToast("error", "Password Required", err);
-      return;
-    }
-
-    if (password.length < 8) {
-      const err = "Password must be at least 8 characters long.";
-      setFormError(err);
-      addToast("error", "Security Rule", err);
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      const err = "Password and Confirm Password do not match.";
-      setFormError(err);
-      addToast("error", "Password Mismatch", err);
-      setModalState({
-        isOpen: true,
-        type: "invalid_password",
-        title: "Passwords Do Not Match",
-        message: "Please ensure New Password and Confirm Password match exactly.",
-      });
-      return;
-    }
-
-    setIsLoading(true);
+    setIsOtpLoading(true);
 
     try {
-      const res = await fetch("/api/auth/register", {
+      const res = await fetch("/api/auth/otp/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: username.trim(), email: email.trim(), password }),
+        body: JSON.stringify({ email: otpEmail.trim(), otpCode: otpCode.trim() }),
       });
 
       const data = await res.json();
+      setIsOtpLoading(false);
 
       if (!res.ok) {
-        setIsLoading(false);
-
-        // Scenario: Email is ALREADY registered -> Show Popup Modal
-        if (data.alreadyRegistered) {
-          setModalState({
-            isOpen: true,
-            type: "already_registered",
-            title: "This email is already registered.",
-            message: "Please log in to continue.",
-            emailPrefill: email.trim(),
-          });
-          return;
-        }
-
-        setFormError(data.error || "Registration failed.");
-        addToast("error", "Registration Failed", data.error || "Failed to create account.");
+        setFormError(data.error || "Invalid OTP code.");
+        addToast("error", "OTP Verification Failed", data.error || "Invalid OTP code.");
         return;
       }
 
-      // Successful Registration -> Automatically redirect user directly to Dashboard
-      addToast("success", "Registration successful.", `Welcome, ${data.user.name}! Redirecting directly to Dashboard...`);
-
-      setTimeout(() => {
-        setIsLoading(false);
-        onLoginSuccess(data.user);
-      }, 600);
-
+      if (data.token) {
+        localStorage.setItem("ai_hub_token", data.token);
+      }
+      addToast("success", "OTP Verified!", `Authenticated as ${data.user.email}`);
+      onLoginSuccess(data.user);
     } catch (err: any) {
-      setIsLoading(false);
-      setFormError("Server error during registration. Please try again.");
-    }
-  };
-
-  // Handle Google OAuth Sign-In
-  const handleGoogleSignIn = async () => {
-    setIsLoading(true);
-    setFormError("");
-
-    try {
-      const res = await fetch("/api/auth/google", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: email || "user.scholar@gmail.com",
-          name: username || "Google User",
-        }),
-      });
-
-      const data = await res.json();
-      addToast("success", "Google Sign-In Successful", "Redirecting directly to Dashboard...");
-      
-      setTimeout(() => {
-        setIsLoading(false);
-        onLoginSuccess(data.user);
-      }, 500);
-    } catch (err) {
-      setIsLoading(false);
-      setFormError("Google authentication failed.");
+      setIsOtpLoading(false);
+      setFormError("Server error verifying OTP code. Please try again.");
     }
   };
 
@@ -273,7 +144,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
         <div className="absolute top-5 left-5 z-40">
           <button
             onClick={onBackToLanding}
-            className="px-4 py-2 rounded-xl bg-[#2A374E] text-[#B8C9DD] hover:text-white border border-[#38475F] text-xs font-bold transition-all shadow-md flex items-center gap-2"
+            className="px-4 py-2 rounded-xl bg-[#2A374E] text-[#B8C9DD] hover:text-white border border-[#38475F] text-xs font-bold transition-all shadow-md flex items-center gap-2 cursor-pointer"
           >
             <span>← Back to Landing Page</span>
           </button>
@@ -302,106 +173,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({
             </div>
             <button
               onClick={() => removeToast(toast.id)}
-              className="text-[#B8C9DD] hover:text-white transition-colors"
+              className="text-[#B8C9DD] hover:text-white transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
         ))}
       </div>
-
-      {/* Interactive Authentication Popup Modal */}
-      {modalState.isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#12171F]/80 backdrop-blur-md animate-fade-in">
-          <div className="bg-[#2A374E] border border-[#38475F] rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative text-center">
-            
-            <button
-              onClick={() => setModalState({ ...modalState, isOpen: false })}
-              className="absolute top-4 right-4 p-1.5 text-[#B8C9DD] hover:text-white rounded-lg hover:bg-[#38475F] transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            {modalState.type === "email_not_found" ? (
-              <div className="w-16 h-16 rounded-2xl bg-[#1F98DC]/20 border border-[#1F98DC]/40 text-[#1F98DC] flex items-center justify-center mx-auto mb-4 shadow-md">
-                <AlertCircle className="w-9 h-9" />
-              </div>
-            ) : modalState.type === "already_registered" ? (
-              <div className="w-16 h-16 rounded-2xl bg-[#63A0D9]/20 border border-[#63A0D9]/40 text-[#63A0D9] flex items-center justify-center mx-auto mb-4 shadow-md">
-                <ShieldCheck className="w-9 h-9" />
-              </div>
-            ) : (
-              <div className="w-16 h-16 rounded-2xl bg-[#EF4444]/20 border border-[#EF4444]/40 text-[#EF4444] flex items-center justify-center mx-auto mb-4 shadow-md">
-                <AlertCircle className="w-9 h-9" />
-              </div>
-            )}
-
-            <h3 className="text-lg font-bold text-white mb-2 leading-snug">
-              {modalState.title}
-            </h3>
-
-            <p className="text-xs text-[#B8C9DD] mb-6 leading-relaxed">
-              {modalState.message}
-            </p>
-
-            {/* Action Buttons inside Popup Modal */}
-            {modalState.type === "email_not_found" ? (
-              <div className="flex flex-col gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAuthMode("signup");
-                    if (modalState.emailPrefill) setEmail(modalState.emailPrefill);
-                    setModalState({ ...modalState, isOpen: false });
-                  }}
-                  className="w-full py-3 px-4 bg-[#1F98DC] hover:bg-[#63A0D9] text-white font-bold text-xs rounded-xl shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all"
-                >
-                  <UserPlus className="w-4 h-4" />
-                  <span>Register Now</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setModalState({ ...modalState, isOpen: false })}
-                  className="w-full py-2.5 px-4 bg-[#38475F] hover:bg-[#2A374E] text-[#B8C9DD] hover:text-white font-semibold text-xs rounded-xl cursor-pointer transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            ) : modalState.type === "already_registered" ? (
-              <div className="flex flex-col gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAuthMode("login");
-                    if (modalState.emailPrefill) setEmail(modalState.emailPrefill);
-                    setModalState({ ...modalState, isOpen: false });
-                  }}
-                  className="w-full py-3 px-4 bg-[#1F98DC] hover:bg-[#63A0D9] text-white font-bold text-xs rounded-xl shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all"
-                >
-                  <LogIn className="w-4 h-4" />
-                  <span>Go to Login</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setModalState({ ...modalState, isOpen: false })}
-                  className="w-full py-2.5 px-4 bg-[#38475F] hover:bg-[#2A374E] text-[#B8C9DD] hover:text-white font-semibold text-xs rounded-xl cursor-pointer transition-colors"
-                >
-                  Close
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setModalState({ ...modalState, isOpen: false })}
-                className="w-full py-3 px-4 bg-[#38475F] hover:bg-[#2A374E] text-white font-bold text-xs rounded-xl cursor-pointer transition-colors"
-              >
-                Try Again
-              </button>
-            )}
-
-          </div>
-        </div>
-      )}
 
       {/* Branding Header */}
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center z-10 px-4">
@@ -421,36 +199,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md z-10 px-4">
         <div className="bg-[#FFFFFF] py-8 px-6 sm:px-10 shadow-xl rounded-3xl border border-[#E5E7EB]">
           
-          {/* Mode Switch Tabs */}
-          <div className="flex bg-[#F1F2F5] p-1 rounded-2xl mb-6 border border-[#E5E7EB]">
-            <button
-              type="button"
-              onClick={() => {
-                setAuthMode("login");
-                setFormError("");
-              }}
-              className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all duration-200 cursor-pointer ${
-                authMode === "login"
-                  ? "bg-[#1F98DC] text-white shadow-xs"
-                  : "text-[#6A7788] hover:text-[#12171F]"
-              }`}
-            >
-              Login
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setAuthMode("signup");
-                setFormError("");
-              }}
-              className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all duration-200 cursor-pointer ${
-                authMode === "signup"
-                  ? "bg-[#1F98DC] text-white shadow-xs"
-                  : "text-[#6A7788] hover:text-[#12171F]"
-              }`}
-            >
-              Register
-            </button>
+          {/* Card Title Header */}
+          <div className="flex items-center justify-center gap-2 mb-6 pb-4 border-b border-[#E5E7EB] text-center">
+            <KeyRound className="w-5 h-5 text-[#1F98DC]" />
+            <span className="text-sm font-extrabold text-[#12171F]">Passwordless OTP Login</span>
           </div>
 
           {/* Form Error Banner */}
@@ -461,11 +213,16 @@ export const LoginPage: React.FC<LoginPageProps> = ({
             </div>
           )}
 
-          {/* Form Section */}
-          {authMode === "login" ? (
-            /* ================= LOGIN FORM ================= */
-            <form className="space-y-4" onSubmit={handleLoginSubmit}>
-              {/* Email Address field */}
+          {/* OTP Flow */}
+          {otpStep === "request" ? (
+            <form className="space-y-4" onSubmit={handleRequestOtp}>
+              <div className="text-center mb-2">
+                <h3 className="text-sm font-bold text-[#12171F]">Request One-Time Password</h3>
+                <p className="text-xs text-[#6A7788] mt-1">
+                  Enter your email address to receive a 6-digit login verification code.
+                </p>
+              </div>
+
               <div>
                 <label className="block text-xs font-semibold text-[#12171F] mb-1.5">
                   Email Address
@@ -476,227 +233,125 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                     type="email"
                     required
                     placeholder="user@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    value={otpEmail}
+                    onChange={(e) => setOtpEmail(e.target.value)}
                     className="w-full pl-10 pr-4 py-2.5 text-xs bg-[#F1F2F5] border border-[#E5E7EB] rounded-xl text-[#12171F] placeholder-[#6A7788] focus:outline-hidden focus:ring-2 focus:ring-[#1F98DC] focus:bg-[#FFFFFF] transition-all"
                   />
                 </div>
               </div>
 
-              {/* Password field with Show/Hide Toggle */}
-              <div>
-                <label className="block text-xs font-semibold text-[#12171F] mb-1.5">
-                  Password
-                </label>
-                <div className="relative">
-                  <Lock className="w-4 h-4 text-[#6A7788] absolute left-3.5 top-1/2 -translate-y-1/2" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    required
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-10 py-2.5 text-xs bg-[#F1F2F5] border border-[#E5E7EB] rounded-xl text-[#12171F] placeholder-[#6A7788] focus:outline-hidden focus:ring-2 focus:ring-[#1F98DC] focus:bg-[#FFFFFF] transition-all"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#6A7788] hover:text-[#12171F] transition-colors"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
-
-              {/* Login Button */}
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isOtpLoading}
                 className="w-full py-3 px-4 text-xs font-bold text-white bg-[#1F98DC] hover:bg-[#63A0D9] rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 mt-2"
               >
-                {isLoading ? (
+                {isOtpLoading ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>Verifying Credentials...</span>
+                    <span>Sending OTP...</span>
                   </>
                 ) : (
                   <>
-                    <span>Login</span>
-                    <ArrowRight className="w-4 h-4" />
+                    <Send className="w-4 h-4" />
+                    <span>Send Verification Code</span>
                   </>
                 )}
               </button>
 
-              {/* Link below Login Button */}
-              <div className="text-center pt-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAuthMode("signup");
-                    setFormError("");
-                  }}
-                  className="text-xs text-[#1F98DC] hover:text-[#63A0D9] font-medium transition-colors cursor-pointer"
-                >
-                  Don't have an account? <span className="font-bold underline">Register</span>
-                </button>
+              <div className="p-3 bg-[#F1F2F5] rounded-xl border border-[#E5E7EB] text-center mt-3">
+                <p className="text-[11px] text-[#6A7788] leading-relaxed">
+                  <span className="font-bold text-[#12171F]">New User?</span> An account will be created automatically upon verifying your OTP code.
+                </p>
               </div>
             </form>
           ) : (
-            /* ================= REGISTRATION FORM ================= */
-            <form className="space-y-4" onSubmit={handleRegisterSubmit}>
-              {/* Username field */}
+            <form className="space-y-4" onSubmit={handleVerifyOtp}>
+              <div className="text-center mb-2">
+                <h3 className="text-sm font-bold text-[#12171F]">Enter Verification Code</h3>
+                <p className="text-xs text-[#6A7788] mt-1">
+                  Sent 6-digit code to <span className="font-bold text-[#12171F]">{otpEmail}</span>
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setOtpStep("request")}
+                  className="text-[11px] text-[#1F98DC] hover:underline mt-1 font-semibold cursor-pointer"
+                >
+                  Change Email
+                </button>
+              </div>
+
+              {/* Demo OTP Banner for testing */}
+              {simulatedOtpCode && (
+                <div className="p-3 border border-[#1F98DC]/30 bg-[#1F98DC]/5 rounded-2xl text-center">
+                  <div className="text-[11px] font-bold text-[#6A7788] flex items-center justify-center gap-1">
+                    <Sparkles className="w-3.5 h-3.5 text-[#1F98DC]" />
+                    <span>Your OTP Verification Code</span>
+                  </div>
+                  <div className="text-xl font-black tracking-widest text-[#1F98DC] my-1 font-mono">
+                    {simulatedOtpCode}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setOtpCode(simulatedOtpCode)}
+                    className="text-[10px] font-bold px-3 py-1 bg-[#1F98DC] text-white rounded-lg hover:bg-[#63A0D9] transition-colors cursor-pointer shadow-2xs"
+                  >
+                    Auto-Fill Code
+                  </button>
+                </div>
+              )}
+
               <div>
                 <label className="block text-xs font-semibold text-[#12171F] mb-1.5">
-                  Username
+                  6-Digit Verification Code
                 </label>
                 <div className="relative">
-                  <UserIcon className="w-4 h-4 text-[#6A7788] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <KeyRound className="w-4 h-4 text-[#6A7788] absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
                     required
-                    placeholder="Enter your username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 text-xs bg-[#F1F2F5] border border-[#E5E7EB] rounded-xl text-[#12171F] placeholder-[#6A7788] focus:outline-hidden focus:ring-2 focus:ring-[#1F98DC] focus:bg-[#FFFFFF] transition-all"
+                    maxLength={6}
+                    placeholder="e.g. 123456"
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
+                    className="w-full pl-10 pr-4 py-2.5 text-base font-mono tracking-widest bg-[#F1F2F5] border border-[#E5E7EB] rounded-xl text-[#12171F] placeholder-[#6A7788] focus:outline-hidden focus:ring-2 focus:ring-[#1F98DC] focus:bg-[#FFFFFF] transition-all text-center"
                   />
                 </div>
               </div>
 
-              {/* Email Address field */}
-              <div>
-                <label className="block text-xs font-semibold text-[#12171F] mb-1.5">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <Mail className="w-4 h-4 text-[#6A7788] absolute left-3.5 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="email"
-                    required
-                    placeholder="user@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 text-xs bg-[#F1F2F5] border border-[#E5E7EB] rounded-xl text-[#12171F] placeholder-[#6A7788] focus:outline-hidden focus:ring-2 focus:ring-[#1F98DC] focus:bg-[#FFFFFF] transition-all"
-                  />
-                </div>
-              </div>
-
-              {/* New Password field */}
-              <div>
-                <label className="block text-xs font-semibold text-[#12171F] mb-1.5">
-                  New Password
-                </label>
-                <div className="relative">
-                  <Lock className="w-4 h-4 text-[#6A7788] absolute left-3.5 top-1/2 -translate-y-1/2" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    required
-                    placeholder="Min 8 characters"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-10 py-2.5 text-xs bg-[#F1F2F5] border border-[#E5E7EB] rounded-xl text-[#12171F] placeholder-[#6A7788] focus:outline-hidden focus:ring-2 focus:ring-[#1F98DC] focus:bg-[#FFFFFF] transition-all"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#6A7788] hover:text-[#12171F] transition-colors"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
-
-              {/* Confirm Password field */}
-              <div>
-                <label className="block text-xs font-semibold text-[#12171F] mb-1.5">
-                  Confirm Password
-                </label>
-                <div className="relative">
-                  <Lock className="w-4 h-4 text-[#6A7788] absolute left-3.5 top-1/2 -translate-y-1/2" />
-                  <input
-                    type={showConfirmPassword ? "text" : "password"}
-                    required
-                    placeholder="Re-enter password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full pl-10 pr-10 py-2.5 text-xs bg-[#F1F2F5] border border-[#E5E7EB] rounded-xl text-[#12171F] placeholder-[#6A7788] focus:outline-hidden focus:ring-2 focus:ring-[#1F98DC] focus:bg-[#FFFFFF] transition-all"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#6A7788] hover:text-[#12171F] transition-colors"
-                  >
-                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
-
-              {/* Register Account Button */}
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isOtpLoading}
                 className="w-full py-3 px-4 text-xs font-bold text-white bg-[#1F98DC] hover:bg-[#63A0D9] rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 mt-2"
               >
-                {isLoading ? (
+                {isOtpLoading ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>Creating Account...</span>
+                    <span>Verifying Code...</span>
                   </>
                 ) : (
                   <>
-                    <span>Register Account</span>
-                    <ArrowRight className="w-4 h-4" />
+                    <LogIn className="w-4 h-4" />
+                    <span>Verify & Continue</span>
                   </>
                 )}
               </button>
 
-              {/* Link below Register Button */}
               <div className="text-center pt-2">
                 <button
                   type="button"
-                  onClick={() => {
-                    setAuthMode("login");
-                    setFormError("");
-                  }}
+                  onClick={() => handleRequestOtp()}
+                  disabled={isOtpLoading}
                   className="text-xs text-[#1F98DC] hover:text-[#63A0D9] font-medium transition-colors cursor-pointer"
                 >
-                  Already have an account? <span className="font-bold underline">Log In</span>
+                  Didn't receive code? <span className="font-bold underline">Resend OTP</span>
                 </button>
               </div>
             </form>
           )}
 
-          {/* Divider */}
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-[#E5E7EB]" />
-            </div>
-            <div className="relative flex justify-center text-[11px] uppercase">
-              <span className="bg-[#FFFFFF] px-3 text-[#6A7788] font-semibold tracking-wider">
-                Or Continue With
-              </span>
-            </div>
-          </div>
-
-          {/* Google Authentication Button */}
-          <div>
-            <button
-              type="button"
-              onClick={handleGoogleSignIn}
-              disabled={isLoading}
-              className="w-full py-2.5 px-4 border border-[#E5E7EB] rounded-xl text-xs font-semibold text-[#12171F] bg-[#FFFFFF] hover:bg-[#F1F2F5] flex items-center justify-center gap-3 transition-all cursor-pointer hover:border-[#63A0D9] shadow-xs group"
-            >
-              <svg className="w-4 h-4 transition-transform group-hover:scale-110" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-              </svg>
-              <span>Continue with Google</span>
-            </button>
-          </div>
-
         </div>
       </div>
+
     </div>
   );
 };

@@ -52,6 +52,33 @@ export default function App() {
     localStorage.setItem("ai_hub_theme", theme);
   }, [theme]);
 
+  // Verify active session with backend on startup
+  useEffect(() => {
+    const token = localStorage.getItem("ai_hub_token");
+    if (token) {
+      fetch("/api/auth/me", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data && data.user) {
+            setUser(data.user);
+            localStorage.setItem("ai_hub_user", JSON.stringify(data.user));
+          }
+        })
+        .catch((err) => {
+          console.warn("Session check error:", err);
+        });
+    }
+  }, []);
+
+  // Guard authenticated users: prevent accessing auth (login/register) pages and route to workspace
+  useEffect(() => {
+    if (user && viewMode === "auth") {
+      setViewMode("workspace");
+    }
+  }, [user, viewMode]);
+
   // Handle successful user authentication and redirect to main workspace dashboard
   const handleLoginSuccess = (newUser: User) => {
     setUser(newUser);
@@ -60,9 +87,15 @@ export default function App() {
   };
 
   // Handle user logout and redirect back to the product landing page
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch (e) {
+      // Ignore network errors on logout
+    }
     setUser(null);
     localStorage.removeItem("ai_hub_user");
+    localStorage.removeItem("ai_hub_token");
     setSelectedDomain(null);
     setSelectedProject(null);
     setViewMode("landing");
@@ -88,13 +121,12 @@ export default function App() {
 
   // Render logic for unauthenticated visitors
   if (!user) {
-    // Render Authentication Screen (Login or Registration)
+    // Render Authentication Screen (OTP Verification)
     if (viewMode === "auth") {
       return (
         <LoginPage
           onLoginSuccess={handleLoginSuccess}
           onBackToLanding={() => setViewMode("landing")}
-          initialMode={authInitialMode} /* Passes "login" or "signup" depending on which button was clicked */
         />
       );
     }
@@ -102,21 +134,9 @@ export default function App() {
     // Default: Render Enterprise SaaS Landing Page
     return (
       <LandingPage
-        onSignInClick={() => {
-          // When clicking "SIGN IN", open LoginPage directly on the Sign In tab
-          setAuthInitialMode("login");
-          setViewMode("auth");
-        }}
-        onCreateAccountClick={() => {
-          // When clicking "CREATE ACCOUNT" or "Get Started Free", open LoginPage directly on the Register tab
-          setAuthInitialMode("signup");
-          setViewMode("auth");
-        }}
-        onEnterWorkspace={() => {
-          // When clicking "Workspace Login", open LoginPage directly on the Sign In tab
-          setAuthInitialMode("login");
-          setViewMode("auth");
-        }}
+        onSignInClick={() => setViewMode("auth")}
+        onCreateAccountClick={() => setViewMode("auth")}
+        onEnterWorkspace={() => setViewMode("auth")}
       />
     );
   }

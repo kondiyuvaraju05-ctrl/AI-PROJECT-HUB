@@ -90,7 +90,8 @@
     "passwordHash": "0d7f70a788eb49fc4ddfed26b8cea0267116a2f09cd6f433096ad10f037b0513",
     "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=CHANDU",
     "provider": "email",
-    "createdAt": "2026-07-27T17:00:25.433Z"
+    "createdAt": "2026-07-27T17:00:25.433Z",
+    "lastLogin": "2026-08-04T15:43:34.572Z"
   },
   {
     "id": "google_1785344837168",
@@ -226,5 +227,16 @@
     "provider": "email",
     "createdAt": "2026-08-03T16:28:37.924Z",
     "lastLogin": "2026-08-03T16:28:37.924Z"
+  },
+  {
+    "id": "usr_1785825245016_e0p8o",
+    "name": "Rajkondi05",
+    "username": "rajkondi05",
+    "email": "rajkondi05@gmail.com",
+    "passwordHash": "3a96236f34703fa664d4c6591477100ba82cbb07e52dd147e751545206a3396c",
+    "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Rajkondi05",
+    "provider": "email",
+    "createdAt": "2026-08-04T06:34:05.016Z",
+    "lastLogin": "2026-08-04T06:34:05.016Z"
   }
 ]

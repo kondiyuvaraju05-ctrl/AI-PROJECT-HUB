@@ -238,5 +238,16 @@
     "provider": "email",
     "createdAt": "2026-08-04T06:34:05.016Z",
     "lastLogin": "2026-08-04T06:34:05.016Z"
+  },
+  {
+    "id": "usr_1785907345227_bs40z",
+    "name": "Sankarapuraminaidu",
+    "username": "sankarapuraminaidu",
+    "email": "sankarapuraminaidu@gmail.com",
+    "passwordHash": "3b03aba1b9683f12cccbb18a55e878ffa0f6d0a08804f931548d2d9b6d3b7bf9",
+    "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Sankarapuraminaidu",
+    "provider": "email",
+    "createdAt": "2026-08-05T05:22:25.227Z",
+    "lastLogin": "2026-08-05T05:22:25.227Z"
   }
 ]

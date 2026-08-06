@@ -23,8 +23,14 @@ interface StoredUser {
   lastLogin?: string;
 }
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const getAppDir = () => {
+  if (typeof __dirname !== "undefined") return __dirname;
+  if (typeof import.meta !== "undefined" && import.meta.url) {
+    return path.dirname(fileURLToPath(import.meta.url));
+  }
+  return process.cwd();
+};
+const appDir = getAppDir();
 
 const DB_FILE = path.join(process.cwd(), "data_users.json");
 
@@ -706,7 +712,7 @@ if (!process.env.VERCEL) {
       });
       app.use(vite.middlewares);
     } else {
-      const distPath = path.join(__dirname, "dist");
+      const distPath = path.join(appDir, "dist");
       app.use(express.static(distPath));
       app.get("*", (_req, res) => {
         res.sendFile(path.join(distPath, "index.html"));

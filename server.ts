@@ -97,8 +97,8 @@ app.use((req, _res, next) => {
     return;
   }
 
-  // Normalize request path if Vercel rewrite alters prefix
-  if (!req.url.startsWith("/api")) {
+  // Normalize request path ONLY if Vercel serverless rewrite alters prefix
+  if (process.env.VERCEL && !req.url.startsWith("/api")) {
     req.url = "/api" + req.url;
   }
 

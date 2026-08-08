@@ -18,7 +18,7 @@
     "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Yuva",
     "provider": "email",
     "createdAt": "2026-07-27T12:13:33.799Z",
-    "lastLogin": "2026-08-03T16:29:04.709Z",
+    "lastLogin": "2026-08-08T15:52:22.335Z",
     "googleId": "gid_1785602529700_myb0"
   },
   {
@@ -249,5 +249,27 @@
     "provider": "email",
     "createdAt": "2026-08-05T05:22:25.227Z",
     "lastLogin": "2026-08-05T05:22:25.227Z"
+  },
+  {
+    "id": "usr_1786203420915_1a2xp",
+    "name": "AuthTester",
+    "username": "AuthTester",
+    "email": "authtester_new@example.com",
+    "passwordHash": "1560a4385561cacaef12e4f6d7c5a52a1b6973c70fa083c379f728f9de50aeea",
+    "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=AuthTester",
+    "provider": "email",
+    "createdAt": "2026-08-08T15:37:00.915Z",
+    "lastLogin": "2026-08-08T15:37:08.274Z"
+  },
+  {
+    "id": "usr_1786204262262_c2kjz",
+    "name": "yuva",
+    "username": "yuva",
+    "email": "yuva2006@gmail.com",
+    "passwordHash": "54d0d8eef3a8c3bcf428396a5bd948eed8603ab4dc35f8f6ab705a34a7b7472b",
+    "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=yuva",
+    "provider": "email",
+    "createdAt": "2026-08-08T15:51:02.262Z",
+    "lastLogin": "2026-08-08T15:51:38.322Z"
   }
 ]

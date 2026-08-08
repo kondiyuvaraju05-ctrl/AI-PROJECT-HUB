@@ -121,12 +121,13 @@ export default function App() {
 
   // Render logic for unauthenticated visitors
   if (!user) {
-    // Render Authentication Screen (OTP Verification)
+    // Render Authentication Screen (Login / Register)
     if (viewMode === "auth") {
       return (
         <LoginPage
           onLoginSuccess={handleLoginSuccess}
           onBackToLanding={() => setViewMode("landing")}
+          initialMode={authInitialMode}
         />
       );
     }
@@ -134,9 +135,18 @@ export default function App() {
     // Default: Render Enterprise SaaS Landing Page
     return (
       <LandingPage
-        onSignInClick={() => setViewMode("auth")}
-        onCreateAccountClick={() => setViewMode("auth")}
-        onEnterWorkspace={() => setViewMode("auth")}
+        onSignInClick={() => {
+          setAuthInitialMode("login");
+          setViewMode("auth");
+        }}
+        onCreateAccountClick={() => {
+          setAuthInitialMode("signup");
+          setViewMode("auth");
+        }}
+        onEnterWorkspace={() => {
+          setAuthInitialMode("login");
+          setViewMode("auth");
+        }}
       />
     );
   }

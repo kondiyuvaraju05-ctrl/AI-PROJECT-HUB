@@ -271,5 +271,27 @@
     "provider": "email",
     "createdAt": "2026-08-08T15:51:02.262Z",
     "lastLogin": "2026-08-08T15:51:38.322Z"
+  },
+  {
+    "id": "usr_1788336671196_hbb0q",
+    "name": "Kondiraj5",
+    "username": "kondiraj5",
+    "email": "kondiraj5@gmail.com",
+    "passwordHash": "54d0d8eef3a8c3bcf428396a5bd948eed8603ab4dc35f8f6ab705a34a7b7472b",
+    "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Kondiraj5",
+    "provider": "email",
+    "createdAt": "2026-09-02T08:11:11.196Z",
+    "lastLogin": "2026-09-03T04:15:53.422Z"
+  },
+  {
+    "id": "usr_1788362757731_vr95f",
+    "name": "sankarapu",
+    "username": "sankarapu",
+    "email": "sankarapuraminaidu09@gmail.com",
+    "passwordHash": "54d0d8eef3a8c3bcf428396a5bd948eed8603ab4dc35f8f6ab705a34a7b7472b",
+    "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=sankarapu",
+    "provider": "email",
+    "createdAt": "2026-09-02T15:25:57.731Z",
+    "lastLogin": "2026-09-02T15:25:57.731Z"
   }
 ]

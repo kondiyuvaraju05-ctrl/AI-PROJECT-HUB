@@ -164,7 +164,7 @@ export default function App() {
 
   // Active Workspace View
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 selection:bg-blue-500 selection:text-white transition-colors">
+    <div className="min-h-screen bg-[#F1F2F5] font-sans text-[#12171F] selection:bg-[#1F98DC] selection:text-white transition-colors">
       
       {/* Top Header Navbar */}
       <Navbar
@@ -210,13 +210,13 @@ export default function App() {
       )}
 
       {/* App Footer */}
-      <footer className="bg-slate-900 text-slate-400 py-8 px-4 text-center text-xs border-t border-slate-800">
+      <footer className="bg-[#2A374E] text-[#B8C9DD] py-8 px-4 text-center text-xs border-t border-[#38475F]">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="text-left">
-            <span className="font-bold text-slate-200 block">AI Project Hub © 2026</span>
+            <span className="font-bold text-white block">AI Project Hub © 2026</span>
             <span>Comprehensive Documentation & AI Project Discussion Platform</span>
           </div>
-          <div className="flex items-center gap-4 text-slate-400">
+          <div className="flex items-center gap-4 text-[#B8C9DD]">
             <span>20 Engineering Domains</span>
             <span>•</span>
             <span>15 Documentation Sections</span>

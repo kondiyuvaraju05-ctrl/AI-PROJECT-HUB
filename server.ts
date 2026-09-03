@@ -264,6 +264,108 @@ app.post("/api/auth/login", (req, res) => {
   }
 });
 
+// Verify Email in Database for Password Reset Flow
+app.post("/api/auth/verify-email", (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      res.status(400).json({ error: "Please enter your email address." });
+      return;
+    }
+
+    const lowerEmail = email.toLowerCase().trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(lowerEmail)) {
+      res.status(400).json({ error: "Please enter a valid email address format." });
+      return;
+    }
+
+    // Check if user exists in database
+    let existingUser: StoredUser | undefined = usersDb.get(lowerEmail);
+    if (!existingUser) {
+      // Also search by matching case-insensitively across values
+      for (const u of usersDb.values()) {
+        if (u.email.toLowerCase() === lowerEmail) {
+          existingUser = u;
+          break;
+        }
+      }
+    }
+
+    if (!existingUser) {
+      res.status(404).json({
+        error: "No account found with this email address in our database. Please check your email or create a new account.",
+        emailNotFound: true,
+      });
+      return;
+    }
+
+    console.log(`[EMAIL VERIFIED FOR RESET] User found: ${lowerEmail} (${existingUser.name})`);
+
+    res.status(200).json({
+      success: true,
+      message: "Email verified successfully in database.",
+      email: lowerEmail,
+      name: existingUser.name || existingUser.username,
+    });
+  } catch (err: any) {
+    console.error("Verify Email Error:", err);
+    res.status(500).json({ error: "Server error verifying email." });
+  }
+});
+
+// Reset and Update Password in Database
+app.post("/api/auth/reset-password", (req, res) => {
+  try {
+    const { email, newPassword } = req.body;
+
+    if (!email || !newPassword) {
+      res.status(400).json({ error: "Email address and new password are required." });
+      return;
+    }
+
+    const lowerEmail = email.toLowerCase().trim();
+    if (newPassword.length < 8) {
+      res.status(400).json({ error: "New password must be at least 8 characters long." });
+      return;
+    }
+
+    let existingUser: StoredUser | undefined = usersDb.get(lowerEmail);
+    if (!existingUser) {
+      for (const u of usersDb.values()) {
+        if (u.email.toLowerCase() === lowerEmail) {
+          existingUser = u;
+          break;
+        }
+      }
+    }
+
+    if (!existingUser) {
+      res.status(404).json({
+        error: "User not found in database. Cannot reset password.",
+        emailNotFound: true,
+      });
+      return;
+    }
+
+    // Hash new password and update in database
+    existingUser.passwordHash = hashPassword(newPassword);
+    usersDb.set(lowerEmail, existingUser);
+    saveUsersToFile(usersDb);
+
+    console.log(`[PASSWORD UPDATED] Password successfully updated in database for: ${lowerEmail}`);
+
+    res.status(200).json({
+      success: true,
+      message: "Password updated successfully in database! You can now sign in with your new password.",
+      email: lowerEmail,
+    });
+  } catch (err: any) {
+    console.error("Reset Password Error:", err);
+    res.status(500).json({ error: "Server error updating password." });
+  }
+});
+
 // Request OTP Code Endpoint
 app.post("/api/auth/otp/request", (req, res) => {
   try {

@@ -1,39 +1,44 @@
 @import "tailwindcss";
 
 @theme {
-  --color-sidebar: #2A374E;
-  --color-sidebar-hover: #38475F;
-  --color-app-bg: #F1F2F5;
-  --color-card-bg: #FFFFFF;
-  --color-primary-blue: #1F98DC;
-  --color-secondary-blue: #63A0D9;
-  --color-light-blue: #B8C9DD;
-  --color-text-primary: #12171F;
-  --color-text-secondary: #6A7788;
-  --color-app-border: #E5E7EB;
-  --color-app-success: #22C55E;
-  --color-app-danger: #EF4444;
+  --color-brand-navy: #2A374E;
+  --color-brand-navy-light: #38475F;
+  --color-brand-dark: #12171F;
+  --color-brand-blue: #1F98DC;
+  --color-brand-blue-soft: #63A0D9;
+  --color-brand-ice: #B8C9DD;
+  --color-brand-bg: #F1F2F5;
+  --color-brand-card: #FFFFFF;
+  --color-brand-border: #E5E7EB;
+  --color-brand-text: #12171F;
+  --color-brand-muted: #6A7788;
+  --color-brand-success: #22C55E;
+  --color-brand-amber: #F59E0B;
+  --color-brand-danger: #EF4444;
 }
 
 :root {
-  --sidebar-bg: #2A374E;
-  --sidebar-hover: #38475F;
-  --app-bg: #F1F2F5;
-  --card-bg: #FFFFFF;
-  --primary-blue: #1F98DC;
-  --secondary-blue: #63A0D9;
-  --light-blue: #B8C9DD;
-  --text-primary: #12171F;
-  --text-secondary: #6A7788;
-  --app-border: #E5E7EB;
-  --app-success: #22C55E;
-  --app-danger: #EF4444;
+  --color-navy: #2A374E;
+  --color-navy-light: #38475F;
+  --color-dark: #12171F;
+  --color-blue: #1F98DC;
+  --color-blue-soft: #63A0D9;
+  --color-ice: #B8C9DD;
+  --color-bg: #F1F2F5;
+  --color-card: #FFFFFF;
+  --color-border: #E5E7EB;
+  --color-text-primary: #12171F;
+  --color-text-secondary: #6A7788;
+  --color-success: #22C55E;
+  --color-amber: #F59E0B;
+  --color-danger: #EF4444;
 }
 
-/* Base custom styles mapping */
+/* Base custom styles */
 body {
   background-color: #F1F2F5;
   color: #12171F;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
 .custom-card {
@@ -41,36 +46,25 @@ body {
   border-color: #E5E7EB;
 }
 
-.custom-sidebar {
+.custom-navy-hero {
   background-color: #2A374E;
   color: #FFFFFF;
-}
-
-.custom-sidebar-hover:hover {
-  background-color: #38475F;
 }
 
 .btn-primary-blue {
   background-color: #1F98DC;
   color: #FFFFFF;
+  transition: all 0.2s ease;
 }
 
 .btn-primary-blue:hover {
-  background-color: #1a87c5;
+  background-color: #1A87C5;
 }
 
-.text-brand-primary {
-  color: #12171F;
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
 }
-
-.text-brand-secondary {
-  color: #6A7788;
-}
-
-.text-brand-blue {
-  color: #1F98DC;
-}
-
-.border-brand {
-  border-color: #E5E7EB;
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

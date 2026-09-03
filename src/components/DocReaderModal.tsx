@@ -36,10 +36,9 @@ export const DocReaderModal: React.FC<DocReaderModalProps> = ({
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   
-  // Gemini 2.5 Pro In-built Side Headings AI Expansion State
+  // Gemini 2.5 Pro Expansion State
   const [isExpanding, setIsExpanding] = useState(false);
   const [expandedContentMap, setExpandedContentMap] = useState<Record<string, string>>({});
-  const [showAiExpander, setShowAiExpander] = useState(false);
   
   // Full Document Creation with Gemini 2.5 Pro ⭐
   const [isGeneratingFullDoc, setIsGeneratingFullDoc] = useState(false);
@@ -69,12 +68,10 @@ export const DocReaderModal: React.FC<DocReaderModalProps> = ({
   const handleDownloadWordDoc = (customDocText?: string) => {
     setShowDownloadMenu(false);
     
-    // Format markdown text into styled Word HTML structure
     let formattedHtml = "";
     const rawText = customDocText || fullGeneratedDoc;
 
     if (rawText) {
-      // Simple markdown to HTML conversion for Word export
       formattedHtml = rawText
         .replace(/^# (.*$)/gim, '<h1>$1</h1>')
         .replace(/^## (.*$)/gim, '<h2>$1</h2>')
@@ -116,14 +113,14 @@ export const DocReaderModal: React.FC<DocReaderModalProps> = ({
       "xmlns='http://www.w3.org/TR/REC-html40'>" +
       "<head><meta charset='utf-8'><title>" + project.name + " Documentation</title>" +
       "<style>" +
-      "body { font-family: 'Segoe UI', Arial, sans-serif; margin: 40px; color: #1e293b; line-height: 1.6; }" +
-      "h1 { color: #1e3a8a; border-bottom: 2px solid #3b82f6; padding-bottom: 8px; font-size: 24pt; }" +
-      "h2 { color: #1e40af; margin-top: 24px; font-size: 16pt; border-left: 4px solid #3b82f6; padding-left: 10px; }" +
-      "h3 { color: #1f2937; margin-top: 16px; font-size: 13pt; }" +
+      "body { font-family: 'Segoe UI', Arial, sans-serif; margin: 40px; color: #12171F; line-height: 1.6; }" +
+      "h1 { color: #2A374E; border-bottom: 2px solid #1F98DC; padding-bottom: 8px; font-size: 24pt; }" +
+      "h2 { color: #2A374E; margin-top: 24px; font-size: 16pt; border-left: 4px solid #1F98DC; padding-left: 10px; }" +
+      "h3 { color: #38475F; margin-top: 16px; font-size: 13pt; }" +
       "p { font-size: 11pt; text-align: justify; margin-bottom: 12px; }" +
       "ul { margin-bottom: 12px; }" +
       "li { margin-bottom: 4px; font-size: 11pt; }" +
-      "blockquote { background: #f8fafc; border-left: 4px solid #8b5cf6; margin: 16px 0; padding: 12px 16px; font-style: italic; }" +
+      "blockquote { background: #F1F2F5; border-left: 4px solid #1F98DC; margin: 16px 0; padding: 12px 16px; font-style: italic; }" +
       "</style></head><body>";
 
     const footer = "</body></html>";
@@ -140,7 +137,6 @@ export const DocReaderModal: React.FC<DocReaderModalProps> = ({
 
   const handleExpandWithGeminiPro = async (chapterTitle: string, currentText: string) => {
     setIsExpanding(true);
-    setShowAiExpander(true);
     try {
       const res = await fetch("/api/expand-doc", {
         method: "POST",
@@ -302,7 +298,7 @@ export const DocReaderModal: React.FC<DocReaderModalProps> = ({
       const { title, lines } = getChapterData(chapterIdx);
 
       // Header Banner
-      pdf.setFillColor(15, 23, 42); // slate-900
+      pdf.setFillColor(42, 55, 78); // #2A374E
       pdf.rect(0, 0, pageWidth, 55, "F");
 
       pdf.setFont("helvetica", "bold");
@@ -312,7 +308,7 @@ export const DocReaderModal: React.FC<DocReaderModalProps> = ({
 
       pdf.setFontSize(8);
       pdf.setFont("helvetica", "normal");
-      pdf.setTextColor(96, 165, 250); // blue-400
+      pdf.setTextColor(184, 201, 221); // #B8C9DD
       pdf.text(`Academic Project Documentation • Domain: ${project.domainId.toUpperCase()}`, margin, 42);
 
       let y = 80;
@@ -320,11 +316,11 @@ export const DocReaderModal: React.FC<DocReaderModalProps> = ({
       // Section Title
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(14);
-      pdf.setTextColor(15, 23, 42);
+      pdf.setTextColor(18, 23, 31); // #12171F
       pdf.text(title, margin, y);
       y += 16;
 
-      pdf.setDrawColor(226, 232, 240);
+      pdf.setDrawColor(229, 231, 235); // #E5E7EB
       pdf.setLineWidth(1);
       pdf.line(margin, y, pageWidth - margin, y);
       y += 20;
@@ -332,7 +328,7 @@ export const DocReaderModal: React.FC<DocReaderModalProps> = ({
       // Body text
       pdf.setFont("helvetica", "normal");
       pdf.setFontSize(9.5);
-      pdf.setTextColor(51, 65, 85);
+      pdf.setTextColor(18, 23, 31);
 
       lines.forEach((line) => {
         if (!line) {
@@ -348,12 +344,11 @@ export const DocReaderModal: React.FC<DocReaderModalProps> = ({
         y += wrapped.length * 13 + 5;
       });
 
-      // Page numbers
       const totalPages = pdf.getNumberOfPages();
       for (let i = 1; i <= totalPages; i++) {
         pdf.setPage(i);
         pdf.setFontSize(8);
-        pdf.setTextColor(148, 163, 184);
+        pdf.setTextColor(106, 119, 136); // #6A7788
         pdf.text(`AI Project Hub • ${project.name} • Page ${i} of ${totalPages}`, margin, pageHeight - 20);
       }
 
@@ -382,7 +377,7 @@ export const DocReaderModal: React.FC<DocReaderModalProps> = ({
         }
 
         // Header Banner on each chapter page
-        pdf.setFillColor(15, 23, 42); // slate-900
+        pdf.setFillColor(42, 55, 78); // #2A374E
         pdf.rect(0, 0, pageWidth, 55, "F");
 
         pdf.setFont("helvetica", "bold");
@@ -392,7 +387,7 @@ export const DocReaderModal: React.FC<DocReaderModalProps> = ({
 
         pdf.setFontSize(8);
         pdf.setFont("helvetica", "normal");
-        pdf.setTextColor(96, 165, 250);
+        pdf.setTextColor(184, 201, 221); // #B8C9DD
         pdf.text(`Academic Documentation Report • Author: ${project.author}`, margin, 42);
 
         let y = 80;
@@ -401,18 +396,18 @@ export const DocReaderModal: React.FC<DocReaderModalProps> = ({
 
         pdf.setFont("helvetica", "bold");
         pdf.setFontSize(13);
-        pdf.setTextColor(15, 23, 42);
+        pdf.setTextColor(18, 23, 31);
         pdf.text(title, margin, y);
         y += 16;
 
-        pdf.setDrawColor(226, 232, 240);
+        pdf.setDrawColor(229, 231, 235);
         pdf.setLineWidth(1);
         pdf.line(margin, y, pageWidth - margin, y);
         y += 20;
 
         pdf.setFont("helvetica", "normal");
         pdf.setFontSize(9.5);
-        pdf.setTextColor(51, 65, 85);
+        pdf.setTextColor(18, 23, 31);
 
         lines.forEach((line) => {
           if (!line) {
@@ -422,8 +417,7 @@ export const DocReaderModal: React.FC<DocReaderModalProps> = ({
           const wrapped = pdf.splitTextToSize(line, maxLineWidth);
           if (y + wrapped.length * 13 > pageHeight - margin) {
             pdf.addPage();
-            // Repeat slim header banner on continuation page
-            pdf.setFillColor(15, 23, 42);
+            pdf.setFillColor(42, 55, 78);
             pdf.rect(0, 0, pageWidth, 35, "F");
             pdf.setFont("helvetica", "bold");
             pdf.setFontSize(9);
@@ -433,19 +427,18 @@ export const DocReaderModal: React.FC<DocReaderModalProps> = ({
             y = 50;
             pdf.setFont("helvetica", "normal");
             pdf.setFontSize(9.5);
-            pdf.setTextColor(51, 65, 85);
+            pdf.setTextColor(18, 23, 31);
           }
           pdf.text(wrapped, margin, y);
           y += wrapped.length * 13 + 5;
         });
       });
 
-      // Page numbering
       const totalPages = pdf.getNumberOfPages();
       for (let i = 1; i <= totalPages; i++) {
         pdf.setPage(i);
         pdf.setFontSize(8);
-        pdf.setTextColor(148, 163, 184);
+        pdf.setTextColor(106, 119, 136);
         pdf.text(
           `AI Project Hub • Formal Academic Documentation • Page ${i} of ${totalPages}`,
           margin,
@@ -538,17 +531,17 @@ Software: ${doc.systemRequirements?.software.join(", ") || "Node.js, React, Expr
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-hidden">
-      <div className="bg-white w-full max-w-6xl h-[94vh] rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-50 bg-[#12171F]/80 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-hidden font-sans">
+      <div className="bg-[#FFFFFF] w-full max-w-6xl h-[94vh] rounded-2xl shadow-2xl border border-[#E5E7EB] flex flex-col overflow-hidden">
         
-        {/* Modal Top Header Bar */}
-        <div className="bg-slate-900 text-white px-6 py-4 flex items-center justify-between border-b border-slate-800 shrink-0">
+        {/* Modal Top Header Bar - `#2A374E` */}
+        <div className="bg-[#2A374E] text-white px-6 py-4 flex items-center justify-between border-b border-[#38475F] shrink-0">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-blue-600 text-white">
+            <div className="p-2 rounded-xl bg-[#1F98DC] text-white">
               <GraduationCap className="w-5 h-5" />
             </div>
             <div>
-              <span className="text-xs font-semibold text-blue-400 uppercase tracking-widest block">
+              <span className="text-xs font-semibold text-[#B8C9DD] uppercase tracking-widest block">
                 Academic & College Project Report
               </span>
               <h2 className="text-base sm:text-lg font-extrabold text-white truncate max-w-md sm:max-w-xl">
@@ -560,18 +553,18 @@ Software: ${doc.systemRequirements?.software.join(", ") || "Node.js, React, Expr
           <div className="flex items-center gap-2 relative">
             <button
               onClick={handleCopyGoogleDocsFormat}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer shadow-xs"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#38475F] hover:bg-[#38475F]/80 text-[#B8C9DD] hover:text-white border border-[#63A0D9]/30 text-xs font-semibold rounded-lg transition-colors cursor-pointer shadow-xs"
               title="Copy formatted with side headings for Google Docs"
             >
-              {copiedDocsFormat ? <Check className="w-3.5 h-3.5 text-purple-200" /> : <Sparkles className="w-3.5 h-3.5 text-amber-300" />}
+              {copiedDocsFormat ? <Check className="w-3.5 h-3.5 text-[#22C55E]" /> : <Sparkles className="w-3.5 h-3.5 text-[#1F98DC]" />}
               <span className="hidden sm:inline">{copiedDocsFormat ? "Docs Format Copied!" : "Copy for Google Docs"}</span>
             </button>
 
             <button
               onClick={handleCopyAllMarkdown}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-lg border border-slate-700 transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#38475F] hover:bg-[#38475F]/80 text-[#B8C9DD] hover:text-white text-xs font-semibold rounded-lg border border-[#38475F] transition-colors cursor-pointer"
             >
-              {copiedAll ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+              {copiedAll ? <Check className="w-3.5 h-3.5 text-[#22C55E]" /> : <Copy className="w-3.5 h-3.5" />}
               <span className="hidden sm:inline">{copiedAll ? "Copied All!" : "Copy Markdown"}</span>
             </button>
 
@@ -580,7 +573,7 @@ Software: ${doc.systemRequirements?.software.join(", ") || "Node.js, React, Expr
               <button
                 onClick={() => setShowDownloadMenu(!showDownloadMenu)}
                 disabled={isGeneratingPdf || isGeneratingFullDoc}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors shadow-xs cursor-pointer disabled:opacity-50"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1F98DC] hover:bg-[#63A0D9] text-white text-xs font-semibold rounded-lg transition-colors shadow-xs cursor-pointer disabled:opacity-50"
               >
                 {isGeneratingPdf || isGeneratingFullDoc ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -591,38 +584,38 @@ Software: ${doc.systemRequirements?.software.join(", ") || "Node.js, React, Expr
               </button>
 
               {showDownloadMenu && (
-                <div className="absolute right-0 mt-2 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl z-50 p-1.5 space-y-1">
+                <div className="absolute right-0 mt-2 w-64 bg-[#2A374E] border border-[#38475F] rounded-xl shadow-2xl z-50 p-1.5 space-y-1">
                   <button
                     onClick={() => handleDownloadSectionPdf(activeChapterIndex)}
-                    className="w-full text-left px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-800 hover:text-white rounded-lg flex items-center justify-between transition-colors cursor-pointer"
+                    className="w-full text-left px-3 py-2 text-xs font-semibold text-[#B8C9DD] hover:bg-[#38475F] hover:text-white rounded-lg flex items-center justify-between transition-colors cursor-pointer"
                   >
                     <span>Download Current Section (PDF)</span>
-                    <FileDown className="w-3.5 h-3.5 text-emerald-400" />
+                    <FileDown className="w-3.5 h-3.5 text-[#1F98DC]" />
                   </button>
                   <button
                     onClick={handleDownloadFullReportPdf}
-                    className="w-full text-left px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-800 hover:text-white rounded-lg flex items-center justify-between transition-colors cursor-pointer"
+                    className="w-full text-left px-3 py-2 text-xs font-semibold text-[#B8C9DD] hover:bg-[#38475F] hover:text-white rounded-lg flex items-center justify-between transition-colors cursor-pointer"
                   >
                     <span>Download Full PDF Report (15 Sections)</span>
-                    <FileText className="w-3.5 h-3.5 text-blue-400" />
+                    <FileText className="w-3.5 h-3.5 text-[#1F98DC]" />
                   </button>
-                  <div className="my-1 border-t border-slate-800" />
+                  <div className="my-1 border-t border-[#38475F]" />
                   <button
                     onClick={() => handleDownloadWordDoc()}
-                    className="w-full text-left px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-800 hover:text-white rounded-lg flex items-center justify-between transition-colors cursor-pointer"
+                    className="w-full text-left px-3 py-2 text-xs font-semibold text-[#B8C9DD] hover:bg-[#38475F] hover:text-white rounded-lg flex items-center justify-between transition-colors cursor-pointer"
                   >
                     <span>Download Word Document (.doc)</span>
-                    <FileText className="w-3.5 h-3.5 text-purple-400" />
+                    <FileText className="w-3.5 h-3.5 text-[#63A0D9]" />
                   </button>
                   <button
                     onClick={handleGenerateFullDocWithGeminiPro}
-                    className="w-full text-left px-3 py-2 text-xs font-semibold text-purple-300 hover:bg-purple-900/40 hover:text-purple-200 rounded-lg flex items-center justify-between transition-colors cursor-pointer"
+                    className="w-full text-left px-3 py-2 text-xs font-semibold text-[#1F98DC] hover:bg-[#38475F] hover:text-white rounded-lg flex items-center justify-between transition-colors cursor-pointer"
                   >
                     <span className="flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                      <Sparkles className="w-3.5 h-3.5 text-[#1F98DC]" />
                       Gemini 2.5 Pro ⭐ Full Doc
                     </span>
-                    <Download className="w-3.5 h-3.5 text-purple-300" />
+                    <Download className="w-3.5 h-3.5 text-[#1F98DC]" />
                   </button>
                 </div>
               )}
@@ -630,7 +623,7 @@ Software: ${doc.systemRequirements?.software.join(", ") || "Node.js, React, Expr
 
             <button
               onClick={handlePrint}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#38475F] hover:bg-[#38475F]/80 text-[#B8C9DD] hover:text-white text-xs font-semibold rounded-lg border border-[#38475F] transition-colors cursor-pointer"
             >
               <Printer className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Print / Save PDF</span>
@@ -638,7 +631,7 @@ Software: ${doc.systemRequirements?.software.join(", ") || "Node.js, React, Expr
 
             <button
               onClick={onClose}
-              className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors ml-2 cursor-pointer"
+              className="p-1.5 text-[#B8C9DD] hover:text-white hover:bg-[#38475F] rounded-lg transition-colors ml-2 cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -649,24 +642,24 @@ Software: ${doc.systemRequirements?.software.join(", ") || "Node.js, React, Expr
         <div className="flex-1 flex overflow-hidden">
           
           {/* Chapter Navigation Sidebar */}
-          <div className="w-80 bg-slate-50 border-r border-slate-200 p-4 overflow-y-auto hidden md:block shrink-0">
+          <div className="w-80 bg-[#F1F2F5] border-r border-[#E5E7EB] p-4 overflow-y-auto hidden md:block shrink-0">
             {/* Gemini 2.5 Pro Feature Highlight Box */}
-            <div className="mb-4 p-3 bg-purple-50 border border-purple-200 rounded-xl">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-purple-900 mb-1">
-                <Sparkles className="w-4 h-4 text-purple-600 shrink-0" />
+            <div className="mb-4 p-3 bg-[#FFFFFF] border border-[#E5E7EB] rounded-xl shadow-xs">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-[#12171F] mb-1">
+                <Sparkles className="w-4 h-4 text-[#1F98DC] shrink-0" />
                 <span>Google Gemini 2.5 Pro ⭐</span>
               </div>
-              <p className="text-[11px] text-purple-700 leading-snug">
+              <p className="text-[11px] text-[#6A7788] leading-snug">
                 Optimized for long technical documents. Use side heading tools to expand or generate deep technical explanations.
               </p>
             </div>
 
-            <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider mb-3 px-2 flex items-center justify-between">
+            <h3 className="text-xs font-bold uppercase text-[#6A7788] tracking-wider mb-3 px-2 flex items-center justify-between">
               <span className="flex items-center gap-1.5">
-                <ListOrdered className="w-3.5 h-3.5" />
+                <ListOrdered className="w-3.5 h-3.5 text-[#1F98DC]" />
                 Table of Contents
               </span>
-              <span className="text-[10px] text-slate-400 font-normal">15 Sections</span>
+              <span className="text-[10px] text-[#6A7788] font-normal">15 Sections</span>
             </h3>
             
             <nav className="space-y-1">
@@ -676,36 +669,36 @@ Software: ${doc.systemRequirements?.software.join(", ") || "Node.js, React, Expr
                   onClick={() => setActiveChapterIndex(idx)}
                   className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center justify-between ${
                     activeChapterIndex === idx
-                      ? "bg-blue-600 text-white shadow-xs"
-                      : "text-slate-700 hover:bg-slate-200/60"
+                      ? "bg-[#2A374E] text-white shadow-xs"
+                      : "text-[#12171F] hover:bg-[#FFFFFF] hover:text-[#1F98DC]"
                   }`}
                 >
                   <span className="truncate">{chap.title}</span>
-                  {activeChapterIndex === idx && <ChevronRight className="w-3.5 h-3.5 shrink-0 ml-1" />}
+                  {activeChapterIndex === idx && <ChevronRight className="w-3.5 h-3.5 shrink-0 ml-1 text-[#1F98DC]" />}
                 </button>
               ))}
             </nav>
           </div>
 
           {/* Paper View Container */}
-          <div className="flex-1 overflow-y-auto p-6 sm:p-10 bg-slate-100 font-serif text-slate-900 printable-doc">
+          <div className="flex-1 overflow-y-auto p-6 sm:p-10 bg-[#F1F2F5] text-[#12171F] printable-doc">
             
             {/* Gemini 2.5 Pro Full Document Synthesizer Banner */}
-            <div className="max-w-3xl mx-auto mb-6 bg-gradient-to-r from-purple-900 via-slate-900 to-indigo-900 text-white p-5 rounded-2xl shadow-md border border-purple-500/30 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="max-w-3xl mx-auto mb-6 bg-[#2A374E] text-white p-5 rounded-2xl shadow-md border border-[#38475F] flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex items-start gap-3">
-                <div className="p-2.5 bg-purple-600/30 rounded-xl border border-purple-400/30 text-amber-300 shrink-0">
+                <div className="p-2.5 bg-[#1F98DC]/20 rounded-xl border border-[#63A0D9]/30 text-[#1F98DC] shrink-0">
                   <Sparkles className="w-6 h-6 animate-pulse" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="font-extrabold text-sm text-purple-200 uppercase tracking-wider">
+                    <span className="font-extrabold text-sm text-white uppercase tracking-wider">
                       Google Gemini 2.5 Pro ⭐
                     </span>
-                    <span className="bg-purple-500/30 text-purple-200 text-[10px] font-bold px-2 py-0.5 rounded-full border border-purple-400/30">
+                    <span className="bg-[#1F98DC]/20 text-[#B8C9DD] text-[10px] font-bold px-2 py-0.5 rounded-full border border-[#63A0D9]/30">
                       Exhaustive Doc Generator
                     </span>
                   </div>
-                  <p className="text-xs text-purple-100/90 mt-1">
+                  <p className="text-xs text-[#B8C9DD] mt-1">
                     Synthesize full publication-grade report with in-built side headings. Ready for Google Docs & Word (.doc) export.
                   </p>
                 </div>
@@ -716,14 +709,14 @@ Software: ${doc.systemRequirements?.software.join(", ") || "Node.js, React, Expr
                   <div className="flex items-center gap-2 w-full sm:w-auto">
                     <button
                       onClick={() => handleDownloadWordDoc(fullGeneratedDoc)}
-                      className="flex-1 sm:flex-none px-3.5 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-xs flex items-center justify-center gap-1.5"
+                      className="flex-1 sm:flex-none px-3.5 py-2 bg-[#1F98DC] hover:bg-[#63A0D9] text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-xs flex items-center justify-center gap-1.5"
                     >
                       <FileText className="w-4 h-4" />
                       <span>Export .doc</span>
                     </button>
                     <button
                       onClick={() => setFullGeneratedDoc(null)}
-                      className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-xl transition-all cursor-pointer"
+                      className="px-3 py-2 bg-[#38475F] hover:bg-[#38475F]/80 text-[#B8C9DD] hover:text-white text-xs font-medium rounded-xl transition-all cursor-pointer"
                     >
                       Chapters View
                     </button>
@@ -732,16 +725,16 @@ Software: ${doc.systemRequirements?.software.join(", ") || "Node.js, React, Expr
                   <button
                     onClick={handleGenerateFullDocWithGeminiPro}
                     disabled={isGeneratingFullDoc}
-                    className="w-full sm:w-auto px-4 py-2.5 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-md flex items-center justify-center gap-2 disabled:opacity-50"
+                    className="w-full sm:w-auto px-4 py-2.5 bg-[#1F98DC] hover:bg-[#63A0D9] text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-md flex items-center justify-center gap-2 disabled:opacity-50"
                   >
                     {isGeneratingFullDoc ? (
                       <>
-                        <Loader2 className="w-4 h-4 animate-spin text-amber-300" />
+                        <Loader2 className="w-4 h-4 animate-spin text-white" />
                         <span>Synthesizing Doc...</span>
                       </>
                     ) : (
                       <>
-                        <Sparkles className="w-4 h-4 text-amber-300" />
+                        <Sparkles className="w-4 h-4 text-white" />
                         <span>Generate Full Doc with Gemini 2.5 Pro ⭐</span>
                       </>
                     )}
@@ -750,349 +743,349 @@ Software: ${doc.systemRequirements?.software.join(", ") || "Node.js, React, Expr
               </div>
             </div>
 
-            <div className="max-w-3xl mx-auto bg-white p-8 sm:p-12 shadow-lg rounded-xl border border-slate-200/80 min-h-[900px] font-sans">
+            <div className="max-w-3xl mx-auto bg-[#FFFFFF] p-8 sm:p-12 shadow-lg rounded-xl border border-[#E5E7EB] min-h-[900px]">
               
               {/* GEMINI 2.5 PRO GENERATED FULL DOCUMENT VIEW */}
               {fullGeneratedDoc ? (
                 <div className="space-y-6">
-                  <div className="bg-purple-50 border border-purple-200 p-4 rounded-xl flex items-center justify-between">
+                  <div className="bg-[#F1F2F5] border border-[#E5E7EB] p-4 rounded-xl flex items-center justify-between">
                     <div>
-                      <h2 className="text-sm font-extrabold text-purple-900 flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-purple-600" />
+                      <h2 className="text-sm font-extrabold text-[#12171F] flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-[#1F98DC]" />
                         Gemini 2.5 Pro ⭐ Full Synthesized Project Document
                       </h2>
-                      <p className="text-xs text-purple-700 mt-0.5">
+                      <p className="text-xs text-[#6A7788] mt-0.5">
                         Exhaustive multi-section report with structured in-built side headings.
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => handleDownloadWordDoc(fullGeneratedDoc)}
-                        className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-lg transition-colors cursor-pointer flex items-center gap-1.5"
+                        className="px-3 py-1.5 bg-[#1F98DC] hover:bg-[#63A0D9] text-white text-xs font-bold rounded-lg transition-colors cursor-pointer flex items-center gap-1.5"
                       >
                         <FileText className="w-3.5 h-3.5" />
                         <span>Download Word (.doc)</span>
                       </button>
                       <button
                         onClick={handleCopyGoogleDocsFormat}
-                        className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-lg transition-colors cursor-pointer flex items-center gap-1.5"
+                        className="px-3 py-1.5 bg-[#2A374E] hover:bg-[#38475F] text-white text-xs font-bold rounded-lg transition-colors cursor-pointer flex items-center gap-1.5"
                       >
-                        <Copy className="w-3.5 h-3.5 text-amber-300" />
+                        <Copy className="w-3.5 h-3.5 text-[#B8C9DD]" />
                         <span>Copy for Google Docs</span>
                       </button>
                     </div>
                   </div>
 
-                  <div className="prose prose-purple max-w-none text-sm text-slate-800 whitespace-pre-wrap font-sans leading-relaxed">
+                  <div className="prose max-w-none text-sm text-[#12171F] whitespace-pre-wrap leading-relaxed">
                     {fullGeneratedDoc}
                   </div>
                 </div>
               ) : (
                 <>
                   {/* COVER PAGE (Chapter 0) */}
-              {activeChapterIndex === 0 && (
-                <div className="text-center py-12 border-b-2 border-slate-900 mb-10">
-                  <div className="w-16 h-16 bg-blue-50 text-blue-700 border border-blue-200 rounded-2xl mx-auto flex items-center justify-center mb-6 shadow-xs">
-                    <GraduationCap className="w-8 h-8" />
-                  </div>
-                  <span className="text-xs font-bold uppercase tracking-widest text-slate-500 block mb-2">
-                    A Project Report On
-                  </span>
-                  <h1 className="text-3xl font-extrabold text-slate-900 mb-4 tracking-tight leading-tight">
-                    {project.name}
-                  </h1>
-                  <p className="text-sm font-medium text-slate-600 max-w-lg mx-auto mb-8">
-                    Submitted in partial fulfillment for the requirement of Bachelor / Master of Technology Degree in Engineering & Computer Science
-                  </p>
-                  
-                  <div className="border-t border-b border-slate-200 py-6 my-6 grid grid-cols-2 gap-4 text-xs font-medium text-slate-700">
-                    <div className="text-left pl-8">
-                      <span className="block text-slate-400 uppercase text-[10px] tracking-wider mb-1">Author / Researcher</span>
-                      <span className="font-bold text-slate-900 block">{project.author}</span>
-                      <span>Department of Computer Science</span>
+                  {activeChapterIndex === 0 && (
+                    <div className="text-center py-12 border-b-2 border-[#2A374E] mb-10">
+                      <div className="w-16 h-16 bg-[#2A374E] text-[#1F98DC] rounded-2xl mx-auto flex items-center justify-center mb-6 shadow-xs">
+                        <GraduationCap className="w-8 h-8" />
+                      </div>
+                      <span className="text-xs font-bold uppercase tracking-widest text-[#6A7788] block mb-2">
+                        A Project Report On
+                      </span>
+                      <h1 className="text-3xl font-extrabold text-[#12171F] mb-4 tracking-tight leading-tight">
+                        {project.name}
+                      </h1>
+                      <p className="text-sm font-medium text-[#6A7788] max-w-lg mx-auto mb-8">
+                        Submitted in partial fulfillment for the requirement of Bachelor / Master of Technology Degree in Engineering & Computer Science
+                      </p>
+                      
+                      <div className="border-t border-b border-[#E5E7EB] py-6 my-6 grid grid-cols-2 gap-4 text-xs font-medium text-[#12171F]">
+                        <div className="text-left pl-8">
+                          <span className="block text-[#6A7788] uppercase text-[10px] tracking-wider mb-1">Author / Researcher</span>
+                          <span className="font-bold text-[#12171F] block">{project.author}</span>
+                          <span className="text-[#6A7788]">Department of Computer Science</span>
+                        </div>
+                        <div className="text-right pr-8">
+                          <span className="block text-[#6A7788] uppercase text-[10px] tracking-wider mb-1">Domain Focus</span>
+                          <span className="font-bold text-[#1F98DC] block">{project.domainId.toUpperCase()}</span>
+                          <span className="text-[#6A7788]">Academic Year 2026</span>
+                        </div>
+                      </div>
+
+                      <div className="mt-10 bg-[#F1F2F5] p-4 rounded-xl border border-[#E5E7EB] text-left text-xs text-[#12171F] relative">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-bold text-[#12171F]">Abstract</span>
+                          <button
+                            onClick={() => handleDownloadSectionPdf(0)}
+                            disabled={isGeneratingPdf}
+                            className="flex items-center gap-1 px-2.5 py-1 bg-[#1F98DC] hover:bg-[#63A0D9] text-white text-[11px] font-semibold rounded-md transition-colors cursor-pointer disabled:opacity-50"
+                          >
+                            <FileDown className="w-3.5 h-3.5" />
+                            <span>Download Cover & Abstract PDF</span>
+                          </button>
+                        </div>
+                        <p className="text-[#6A7788] leading-relaxed">{doc.overview}</p>
+                      </div>
                     </div>
-                    <div className="text-right pr-8">
-                      <span className="block text-slate-400 uppercase text-[10px] tracking-wider mb-1">Domain Focus</span>
-                      <span className="font-bold text-blue-700 block">{project.domainId.toUpperCase()}</span>
-                      <span>Academic Year 2026</span>
-                    </div>
-                  </div>
+                  )}
 
-                  <div className="mt-10 bg-slate-50 p-4 rounded-xl border border-slate-200 text-left text-xs text-slate-600 relative">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-bold text-slate-800">Abstract</span>
-                      <button
-                        onClick={() => handleDownloadSectionPdf(0)}
-                        disabled={isGeneratingPdf}
-                        className="flex items-center gap-1 px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-semibold rounded-md transition-colors cursor-pointer disabled:opacity-50"
-                      >
-                        <FileDown className="w-3.5 h-3.5" />
-                        <span>Download Cover & Abstract PDF</span>
-                      </button>
-                    </div>
-                    <p>{doc.overview}</p>
-                  </div>
-                </div>
-              )}
+                  {/* CHAPTER CONTENT RENDERING */}
+                  {activeChapterIndex > 0 && (
+                    <div className="space-y-8">
+                      
+                      <div className="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-[#E5E7EB]">
+                        <h2 className="text-xl font-extrabold text-[#12171F]">
+                          {chapters[activeChapterIndex].title}
+                        </h2>
 
-              {/* CHAPTER CONTENT RENDERING */}
-              {activeChapterIndex > 0 && (
-                <div className="space-y-8">
-                  
-                  <div className="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-slate-200">
-                    <h2 className="text-xl font-extrabold text-slate-900">
-                      {chapters[activeChapterIndex].title}
-                    </h2>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <button
+                            onClick={() => {
+                              const chap = chapters[activeChapterIndex];
+                              let currentText = "";
+                              if (chap.id === "overview") currentText = doc.overview;
+                              else if (chap.id === "problem") currentText = doc.problemStatement;
+                              else if (chap.id === "objective") currentText = doc.objective;
+                              else if (chap.id === "existing") currentText = doc.existingSystem;
+                              else if (chap.id === "proposed") currentText = doc.proposedSystem;
+                              else if (chap.id === "architecture") currentText = doc.architecture;
+                              else if (chap.id === "workflow") currentText = doc.workflow;
+                              else currentText = JSON.stringify(chap);
 
-                    <div className="flex flex-wrap items-center gap-2">
-                      <button
-                        onClick={() => {
-                          const chap = chapters[activeChapterIndex];
-                          let currentText = "";
-                          if (chap.id === "overview") currentText = doc.overview;
-                          else if (chap.id === "problem") currentText = doc.problemStatement;
-                          else if (chap.id === "objective") currentText = doc.objective;
-                          else if (chap.id === "existing") currentText = doc.existingSystem;
-                          else if (chap.id === "proposed") currentText = doc.proposedSystem;
-                          else if (chap.id === "architecture") currentText = doc.architecture;
-                          else if (chap.id === "workflow") currentText = doc.workflow;
-                          else currentText = JSON.stringify(chap);
+                              handleExpandWithGeminiPro(chap.title, currentText);
+                            }}
+                            disabled={isExpanding}
+                            className="flex items-center gap-1.5 px-3 py-1 bg-[#1F98DC] hover:bg-[#63A0D9] text-white text-xs font-semibold rounded-lg shadow-xs transition-colors cursor-pointer disabled:opacity-50"
+                            title="Use Gemini 2.5 Pro to expand this section with structured subheadings"
+                          >
+                            {isExpanding ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                            <span>Expand with Gemini 2.5 Pro ⭐</span>
+                          </button>
 
-                          handleExpandWithGeminiPro(chap.title, currentText);
-                        }}
-                        disabled={isExpanding}
-                        className="flex items-center gap-1.5 px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold rounded-lg shadow-xs transition-colors cursor-pointer disabled:opacity-50"
-                        title="Use Gemini 2.5 Pro to expand this section with structured subheadings"
-                      >
-                        {isExpanding ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5 text-amber-300" />}
-                        <span>Expand with Gemini 2.5 Pro ⭐</span>
-                      </button>
+                          <button
+                            onClick={() => handleDownloadSectionPdf(activeChapterIndex)}
+                            disabled={isGeneratingPdf}
+                            className="flex items-center gap-1.5 px-3 py-1 bg-[#F1F2F5] hover:bg-[#E5E7EB] text-[#12171F] text-xs font-semibold rounded-lg border border-[#E5E7EB] transition-colors cursor-pointer disabled:opacity-50"
+                          >
+                            <FileDown className="w-3.5 h-3.5 text-[#1F98DC]" />
+                            <span>Download Section PDF</span>
+                          </button>
 
-                      <button
-                        onClick={() => handleDownloadSectionPdf(activeChapterIndex)}
-                        disabled={isGeneratingPdf}
-                        className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-lg border border-emerald-200 transition-colors cursor-pointer disabled:opacity-50"
-                      >
-                        <FileDown className="w-3.5 h-3.5 text-emerald-600" />
-                        <span>Download Section PDF</span>
-                      </button>
+                          <button
+                            onClick={() => {
+                              let textToCopy = "";
+                              const chapId = chapters[activeChapterIndex].id;
+                              if (chapId === "overview") textToCopy = doc.overview;
+                              if (chapId === "problem") textToCopy = doc.problemStatement;
+                              if (chapId === "objective") textToCopy = doc.objective;
+                              if (chapId === "existing") textToCopy = doc.existingSystem;
+                              if (chapId === "proposed") textToCopy = doc.proposedSystem;
+                              if (chapId === "architecture") textToCopy = `${doc.architecture}\n\nDiagram Flow: ${doc.architectureDiagramDesc}`;
+                              if (chapId === "workflow") textToCopy = doc.workflow;
+                              if (chapId === "conclusion") textToCopy = doc.conclusion;
+                              handleCopySection(chapters[activeChapterIndex].title, textToCopy || "Section Content");
+                            }}
+                            className="flex items-center gap-1 px-3 py-1 bg-[#F1F2F5] hover:bg-[#E5E7EB] text-[#12171F] text-xs font-semibold rounded-lg border border-[#E5E7EB] transition-colors cursor-pointer"
+                          >
+                            {copiedSection === chapters[activeChapterIndex].title ? (
+                              <Check className="w-3.5 h-3.5 text-[#22C55E]" />
+                            ) : (
+                              <Copy className="w-3.5 h-3.5 text-[#6A7788]" />
+                            )}
+                            <span>Copy Section</span>
+                          </button>
+                        </div>
+                      </div>
 
-                      <button
-                        onClick={() => {
-                          let textToCopy = "";
-                          const chapId = chapters[activeChapterIndex].id;
-                          if (chapId === "overview") textToCopy = doc.overview;
-                          if (chapId === "problem") textToCopy = doc.problemStatement;
-                          if (chapId === "objective") textToCopy = doc.objective;
-                          if (chapId === "existing") textToCopy = doc.existingSystem;
-                          if (chapId === "proposed") textToCopy = doc.proposedSystem;
-                          if (chapId === "architecture") textToCopy = `${doc.architecture}\n\nDiagram Flow: ${doc.architectureDiagramDesc}`;
-                          if (chapId === "workflow") textToCopy = doc.workflow;
-                          if (chapId === "conclusion") textToCopy = doc.conclusion;
-                          handleCopySection(chapters[activeChapterIndex].title, textToCopy || "Section Content");
-                        }}
-                        className="flex items-center gap-1 px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg border border-slate-300 transition-colors cursor-pointer"
-                      >
-                        {copiedSection === chapters[activeChapterIndex].title ? (
-                          <Check className="w-3.5 h-3.5 text-emerald-600" />
-                        ) : (
-                          <Copy className="w-3.5 h-3.5 text-slate-500" />
+                      {/* Body Content depending on chapter */}
+                      <div className="text-sm text-[#12171F] leading-relaxed space-y-4">
+                        {chapters[activeChapterIndex].id === "overview" && (
+                          <p className="whitespace-pre-line">{doc.overview}</p>
                         )}
-                        <span>Copy Section</span>
-                      </button>
-                    </div>
-                  </div>
 
-                  {/* Body Content depending on chapter */}
-                  <div className="text-sm text-slate-800 leading-relaxed space-y-4">
-                    {chapters[activeChapterIndex].id === "overview" && (
-                      <p className="whitespace-pre-line">{doc.overview}</p>
-                    )}
+                        {chapters[activeChapterIndex].id === "problem" && (
+                          <div className="p-4 bg-[#F1F2F5] border border-[#E5E7EB] rounded-xl text-[#12171F]">
+                            <p className="whitespace-pre-line leading-relaxed">{doc.problemStatement}</p>
+                          </div>
+                        )}
 
-                    {chapters[activeChapterIndex].id === "problem" && (
-                      <div className="p-4 bg-red-50/60 border border-red-200 rounded-xl text-slate-800">
-                        <p className="whitespace-pre-line font-serif leading-relaxed">{doc.problemStatement}</p>
-                      </div>
-                    )}
+                        {chapters[activeChapterIndex].id === "objective" && (
+                          <p className="whitespace-pre-line">{doc.objective}</p>
+                        )}
 
-                    {chapters[activeChapterIndex].id === "objective" && (
-                      <p className="whitespace-pre-line">{doc.objective}</p>
-                    )}
+                        {chapters[activeChapterIndex].id === "existing" && (
+                          <p className="whitespace-pre-line">{doc.existingSystem}</p>
+                        )}
 
-                    {chapters[activeChapterIndex].id === "existing" && (
-                      <p className="whitespace-pre-line">{doc.existingSystem}</p>
-                    )}
+                        {chapters[activeChapterIndex].id === "proposed" && (
+                          <p className="whitespace-pre-line">{doc.proposedSystem}</p>
+                        )}
 
-                    {chapters[activeChapterIndex].id === "proposed" && (
-                      <p className="whitespace-pre-line">{doc.proposedSystem}</p>
-                    )}
+                        {chapters[activeChapterIndex].id === "tech" && (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="bg-[#F1F2F5] p-4 rounded-xl border border-[#E5E7EB]">
+                              <span className="font-bold text-xs uppercase text-[#6A7788] block mb-2">Frontend Stack</span>
+                              <ul className="list-disc pl-5 text-xs space-y-1 text-[#12171F]">
+                                {doc.technologiesUsed.frontend.map((item, i) => <li key={i}>{item}</li>)}
+                              </ul>
+                            </div>
+                            <div className="bg-[#F1F2F5] p-4 rounded-xl border border-[#E5E7EB]">
+                              <span className="font-bold text-xs uppercase text-[#6A7788] block mb-2">Backend & Microservices</span>
+                              <ul className="list-disc pl-5 text-xs space-y-1 text-[#12171F]">
+                                {doc.technologiesUsed.backend.map((item, i) => <li key={i}>{item}</li>)}
+                              </ul>
+                            </div>
+                            <div className="bg-[#F1F2F5] p-4 rounded-xl border border-[#E5E7EB]">
+                              <span className="font-bold text-xs uppercase text-[#6A7788] block mb-2">AI Engine & LLM</span>
+                              <ul className="list-disc pl-5 text-xs space-y-1 text-[#1F98DC] font-semibold">
+                                {doc.technologiesUsed.aiServices.map((item, i) => <li key={i}>{item}</li>)}
+                              </ul>
+                            </div>
+                            <div className="bg-[#F1F2F5] p-4 rounded-xl border border-[#E5E7EB]">
+                              <span className="font-bold text-xs uppercase text-[#6A7788] block mb-2">Database & Infrastructure</span>
+                              <ul className="list-disc pl-5 text-xs space-y-1 text-[#12171F]">
+                                {doc.technologiesUsed.database.map((item, i) => <li key={i}>{item}</li>)}
+                              </ul>
+                            </div>
+                          </div>
+                        )}
 
-                    {chapters[activeChapterIndex].id === "tech" && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                          <span className="font-bold text-xs uppercase text-slate-500 block mb-2">Frontend Stack</span>
-                          <ul className="list-disc pl-5 text-xs space-y-1 text-slate-700">
-                            {doc.technologiesUsed.frontend.map((item, i) => <li key={i}>{item}</li>)}
-                          </ul>
-                        </div>
-                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                          <span className="font-bold text-xs uppercase text-slate-500 block mb-2">Backend & Microservices</span>
-                          <ul className="list-disc pl-5 text-xs space-y-1 text-slate-700">
-                            {doc.technologiesUsed.backend.map((item, i) => <li key={i}>{item}</li>)}
-                          </ul>
-                        </div>
-                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                          <span className="font-bold text-xs uppercase text-slate-500 block mb-2">AI Engine & LLM</span>
-                          <ul className="list-disc pl-5 text-xs space-y-1 text-slate-700">
-                            {doc.technologiesUsed.aiServices.map((item, i) => <li key={i}>{item}</li>)}
-                          </ul>
-                        </div>
-                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                          <span className="font-bold text-xs uppercase text-slate-500 block mb-2">Database & Auth</span>
-                          <ul className="list-disc pl-5 text-xs space-y-1 text-slate-700">
-                            {doc.technologiesUsed.database.map((item, i) => <li key={i}>{item}</li>)}
-                          </ul>
-                        </div>
-                      </div>
-                    )}
+                        {chapters[activeChapterIndex].id === "architecture" && (
+                          <div>
+                            <p className="mb-4">{doc.architecture}</p>
+                            <div className="p-4 bg-[#2A374E] text-[#B8C9DD] border border-[#38475F] rounded-xl font-mono text-xs">
+                              <span className="font-bold block mb-1 uppercase tracking-wider text-[#1F98DC]">Architecture Diagram Representation</span>
+                              {doc.architectureDiagramDesc}
+                            </div>
+                          </div>
+                        )}
 
-                    {chapters[activeChapterIndex].id === "architecture" && (
-                      <div>
-                        <p className="mb-4">{doc.architecture}</p>
-                        <div className="p-4 bg-indigo-50 border border-indigo-200 rounded-xl font-mono text-xs text-indigo-900">
-                          <span className="font-bold block mb-1 uppercase tracking-wider text-indigo-700">Architecture Diagram Representation</span>
-                          {doc.architectureDiagramDesc}
-                        </div>
-                      </div>
-                    )}
+                        {chapters[activeChapterIndex].id === "workflow" && (
+                          <div>
+                            <p className="mb-4 whitespace-pre-line">{doc.workflow}</p>
+                            {doc.workflowSteps && (
+                              <div className="space-y-2 mt-4">
+                                {doc.workflowSteps.map((step, idx) => (
+                                  <div key={idx} className="flex items-center gap-3 p-3 bg-[#F1F2F5] border border-[#E5E7EB] rounded-lg text-xs font-semibold text-[#12171F]">
+                                    <span className="w-6 h-6 rounded-full bg-[#1F98DC] text-white flex items-center justify-center text-[10px] shrink-0 font-bold">
+                                      {idx + 1}
+                                    </span>
+                                    <span>{step}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
 
-                    {chapters[activeChapterIndex].id === "workflow" && (
-                      <div>
-                        <p className="mb-4 whitespace-pre-line">{doc.workflow}</p>
-                        {doc.workflowSteps && (
-                          <div className="space-y-2 mt-4">
-                            {doc.workflowSteps.map((step, idx) => (
-                              <div key={idx} className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800">
-                                <span className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] shrink-0">
-                                  {idx + 1}
-                                </span>
-                                <span>{step}</span>
+                        {chapters[activeChapterIndex].id === "modules" && (
+                          <div className="space-y-4">
+                            {doc.modules.map((mod) => (
+                              <div key={mod.id} className="p-4 bg-[#F1F2F5] border border-[#E5E7EB] rounded-xl">
+                                <h4 className="font-bold text-[#12171F] text-sm mb-1">{mod.name}</h4>
+                                <p className="text-xs text-[#6A7788] mb-2">{mod.description}</p>
+                                <span className="text-[10px] font-bold text-[#6A7788] uppercase tracking-wider block mb-1">Key Functions:</span>
+                                <div className="flex flex-wrap gap-1">
+                                  {mod.keyFunctions.map((fn, i) => (
+                                    <span key={i} className="text-[10px] bg-[#FFFFFF] border border-[#E5E7EB] px-2 py-0.5 rounded text-[#12171F]">
+                                      • {fn}
+                                    </span>
+                                  ))}
+                                </div>
                               </div>
                             ))}
                           </div>
                         )}
-                      </div>
-                    )}
 
-                    {chapters[activeChapterIndex].id === "modules" && (
-                      <div className="space-y-4">
-                        {doc.modules.map((mod) => (
-                          <div key={mod.id} className="p-4 bg-slate-50 border border-slate-200 rounded-xl">
-                            <h4 className="font-bold text-slate-900 text-sm mb-1">{mod.name}</h4>
-                            <p className="text-xs text-slate-600 mb-2">{mod.description}</p>
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Key Functions:</span>
-                            <div className="flex flex-wrap gap-1">
-                              {mod.keyFunctions.map((fn, i) => (
-                                <span key={i} className="text-[10px] bg-white border border-slate-200 px-2 py-0.5 rounded text-slate-700">
-                                  • {fn}
-                                </span>
-                              ))}
+                        {chapters[activeChapterIndex].id === "features" && (
+                          <ul className="space-y-2">
+                            {doc.features.map((feat, i) => (
+                              <li key={i} className="flex items-start gap-2.5 p-3 bg-[#F1F2F5] border border-[#E5E7EB] rounded-lg text-xs">
+                                <Check className="w-4 h-4 text-[#22C55E] shrink-0 mt-0.5" />
+                                <span>{feat}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+
+                        {chapters[activeChapterIndex].id === "advantages" && (
+                          <ul className="space-y-2">
+                            {doc.advantages.map((adv, i) => (
+                              <li key={i} className="p-3 bg-[#22C55E]/10 border border-[#22C55E]/30 rounded-lg text-xs text-[#12171F] font-medium">
+                                ✓ {adv}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+
+                        {chapters[activeChapterIndex].id === "limitations" && (
+                          <ul className="space-y-2">
+                            {doc.limitations.map((lim, i) => (
+                              <li key={i} className="p-3 bg-[#F59E0B]/10 border border-[#F59E0B]/30 rounded-lg text-xs text-[#12171F] font-medium">
+                                ⚠ {lim}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+
+                        {chapters[activeChapterIndex].id === "futurescope" && (
+                          <ul className="space-y-2">
+                            {doc.futureScope.map((fs, i) => (
+                              <li key={i} className="p-3 bg-[#1F98DC]/10 border border-[#1F98DC]/30 rounded-lg text-xs text-[#12171F] font-medium">
+                                🚀 {fs}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+
+                        {chapters[activeChapterIndex].id === "conclusion" && (
+                          <p className="whitespace-pre-line leading-relaxed">{doc.conclusion}</p>
+                        )}
+
+                        {chapters[activeChapterIndex].id === "requirements" && (
+                          <div className="space-y-4">
+                            <div className="p-4 bg-[#F1F2F5] border border-[#E5E7EB] rounded-xl">
+                              <span className="font-bold text-xs uppercase text-[#6A7788] block mb-2">Hardware Specifications</span>
+                              <ul className="list-disc pl-5 text-xs text-[#12171F] space-y-1">
+                                {doc.systemRequirements?.hardware.map((h, i) => <li key={i}>{h}</li>) || <li>Standard Server CPU & RAM</li>}
+                              </ul>
+                            </div>
+                            <div className="p-4 bg-[#F1F2F5] border border-[#E5E7EB] rounded-xl">
+                              <span className="font-bold text-xs uppercase text-[#6A7788] block mb-2">Software Environment</span>
+                              <ul className="list-disc pl-5 text-xs text-[#12171F] space-y-1">
+                                {doc.systemRequirements?.software.map((s, i) => <li key={i}>{s}</li>) || <li>Node.js, Express, React 19</li>}
+                              </ul>
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    )}
+                        )}
 
-                    {chapters[activeChapterIndex].id === "features" && (
-                      <ul className="space-y-2">
-                        {doc.features.map((feat, i) => (
-                          <li key={i} className="flex items-start gap-2.5 p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs">
-                            <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                            <span>{feat}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-
-                    {chapters[activeChapterIndex].id === "advantages" && (
-                      <ul className="space-y-2">
-                        {doc.advantages.map((adv, i) => (
-                          <li key={i} className="p-3 bg-emerald-50/60 border border-emerald-200 rounded-lg text-xs text-emerald-900 font-medium">
-                            ✓ {adv}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-
-                    {chapters[activeChapterIndex].id === "limitations" && (
-                      <ul className="space-y-2">
-                        {doc.limitations.map((lim, i) => (
-                          <li key={i} className="p-3 bg-amber-50/60 border border-amber-200 rounded-lg text-xs text-amber-900 font-medium">
-                            ⚠ {lim}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-
-                    {chapters[activeChapterIndex].id === "futurescope" && (
-                      <ul className="space-y-2">
-                        {doc.futureScope.map((fs, i) => (
-                          <li key={i} className="p-3 bg-blue-50/60 border border-blue-200 rounded-lg text-xs text-blue-900 font-medium">
-                            🚀 {fs}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-
-                    {chapters[activeChapterIndex].id === "conclusion" && (
-                      <p className="whitespace-pre-line leading-relaxed">{doc.conclusion}</p>
-                    )}
-
-                    {chapters[activeChapterIndex].id === "requirements" && (
-                      <div className="space-y-4">
-                        <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl">
-                          <span className="font-bold text-xs uppercase text-slate-600 block mb-2">Hardware Specifications</span>
-                          <ul className="list-disc pl-5 text-xs text-slate-700 space-y-1">
-                            {doc.systemRequirements?.hardware.map((h, i) => <li key={i}>{h}</li>) || <li>Standard Server CPU & RAM</li>}
-                          </ul>
-                        </div>
-                        <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl">
-                          <span className="font-bold text-xs uppercase text-slate-600 block mb-2">Software Environment</span>
-                          <ul className="list-disc pl-5 text-xs text-slate-700 space-y-1">
-                            {doc.systemRequirements?.software.map((s, i) => <li key={i}>{s}</li>) || <li>Node.js, Express, React 19</li>}
-                          </ul>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* AI Expanded Content Box (Gemini 2.5 Pro with side headings) */}
-                    {expandedContentMap[chapters[activeChapterIndex].title] && (
-                      <div className="mt-8 p-6 bg-purple-50/70 border-2 border-purple-200 rounded-2xl shadow-sm text-slate-800 space-y-3">
-                        <div className="flex items-center justify-between border-b border-purple-200 pb-3">
-                          <div className="flex items-center gap-2">
-                            <Sparkles className="w-5 h-5 text-purple-600" />
-                            <span className="font-extrabold text-sm text-purple-900 uppercase tracking-wide">
-                              Gemini 2.5 Pro ⭐ In-Built Side Headings Deep Expansion
-                            </span>
+                        {/* AI Expanded Content Box */}
+                        {expandedContentMap[chapters[activeChapterIndex].title] && (
+                          <div className="mt-8 p-6 bg-[#F1F2F5] border-2 border-[#1F98DC]/40 rounded-2xl shadow-sm text-[#12171F] space-y-3">
+                            <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-3">
+                              <div className="flex items-center gap-2">
+                                <Sparkles className="w-5 h-5 text-[#1F98DC]" />
+                                <span className="font-extrabold text-sm text-[#12171F] uppercase tracking-wide">
+                                  Gemini 2.5 Pro ⭐ In-Built Side Headings Deep Expansion
+                                </span>
+                              </div>
+                              <button
+                                onClick={() => handleCopySection(`Expanded - ${chapters[activeChapterIndex].title}`, expandedContentMap[chapters[activeChapterIndex].title])}
+                                className="flex items-center gap-1 px-2.5 py-1 bg-[#1F98DC] hover:bg-[#63A0D9] text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+                              >
+                                <Copy className="w-3.5 h-3.5" />
+                                <span>Copy Expanded Section</span>
+                              </button>
+                            </div>
+                            <div className="prose max-w-none text-xs text-[#12171F] whitespace-pre-wrap leading-relaxed">
+                              {expandedContentMap[chapters[activeChapterIndex].title]}
+                            </div>
                           </div>
-                          <button
-                            onClick={() => handleCopySection(`Expanded - ${chapters[activeChapterIndex].title}`, expandedContentMap[chapters[activeChapterIndex].title])}
-                            className="flex items-center gap-1 px-2.5 py-1 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer"
-                          >
-                            <Copy className="w-3.5 h-3.5" />
-                            <span>Copy Expanded Section</span>
-                          </button>
-                        </div>
-                        <div className="prose prose-purple max-w-none text-xs text-slate-700 whitespace-pre-wrap font-sans leading-relaxed">
-                          {expandedContentMap[chapters[activeChapterIndex].title]}
-                        </div>
-                      </div>
-                    )}
+                        )}
 
-                  </div>
-                </div>
-              )}
-              </>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
 
             </div>
@@ -1102,20 +1095,20 @@ Software: ${doc.systemRequirements?.software.join(", ") || "Node.js, React, Expr
               <button
                 onClick={() => setActiveChapterIndex(Math.max(0, activeChapterIndex - 1))}
                 disabled={activeChapterIndex === 0}
-                className="flex items-center gap-1 px-4 py-2 bg-white border border-slate-300 rounded-lg font-semibold text-slate-700 disabled:opacity-40 transition-colors"
+                className="flex items-center gap-1 px-4 py-2 bg-[#FFFFFF] border border-[#E5E7EB] rounded-lg font-semibold text-[#12171F] hover:bg-[#F1F2F5] disabled:opacity-40 transition-colors cursor-pointer"
               >
                 <ChevronLeft className="w-4 h-4" />
                 <span>Previous Chapter</span>
               </button>
 
-              <span className="font-bold text-slate-500">
+              <span className="font-bold text-[#6A7788]">
                 Page {activeChapterIndex + 1} of {chapters.length}
               </span>
 
               <button
                 onClick={() => setActiveChapterIndex(Math.min(chapters.length - 1, activeChapterIndex + 1))}
                 disabled={activeChapterIndex === chapters.length - 1}
-                className="flex items-center gap-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold disabled:opacity-40 transition-colors"
+                className="flex items-center gap-1 px-4 py-2 bg-[#1F98DC] hover:bg-[#63A0D9] text-white rounded-lg font-semibold disabled:opacity-40 transition-colors cursor-pointer"
               >
                 <span>Next Chapter</span>
                 <ChevronRight className="w-4 h-4" />

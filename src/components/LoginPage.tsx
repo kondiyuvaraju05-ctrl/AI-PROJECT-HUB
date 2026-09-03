@@ -200,7 +200,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({
         }),
       });
 
-      const data = await res.json();
+      let data: any = {};
+      try {
+        data = await res.json();
+      } catch (e) {
+        data = { error: "Server returned a non-JSON response." };
+      }
       setIsLoading(false);
 
       if (!res.ok) {
@@ -211,7 +216,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
           return;
         }
 
-        const errMsg = data.error || "Registration failed. Please try again.";
+        const errMsg = data.error || data.message || "Registration failed. Please try again.";
         setFormError(errMsg);
         addToast("error", "Registration Error", errMsg);
         return;
@@ -224,7 +229,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
       onLoginSuccess(data.user);
     } catch (err: any) {
       setIsLoading(false);
-      const msg = "Server error during registration. Please try again.";
+      const msg = err?.message ? `Connection error: ${err.message}` : "Server error during registration. Please try again.";
       setFormError(msg);
       addToast("error", "Server Error", msg);
     }

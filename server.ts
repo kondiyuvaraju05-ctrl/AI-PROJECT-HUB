@@ -5,23 +5,19 @@ import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 import crypto from "crypto";
-import fs from "fs";
+import { 
+  initDb, 
+  findUserByEmail, 
+  findUserByIdentifier, 
+  findUserById, 
+  createUser, 
+  updateUserPassword, 
+  updateLastLogin,
+  getDbStatus,
+  StoredUser 
+} from "./db";
 
 dotenv.config();
-
-// Persistent Database for Registered Users
-interface StoredUser {
-  id: string;
-  name: string;
-  username: string;
-  email: string;
-  passwordHash: string;
-  avatar: string;
-  provider: "email" | "google";
-  googleId?: string;
-  createdAt: string;
-  lastLogin?: string;
-}
 
 const getAppDir = () => {
   if (typeof __dirname !== "undefined") return __dirname;
@@ -32,41 +28,7 @@ const getAppDir = () => {
 };
 const appDir = getAppDir();
 
-const DB_FILE = path.join(process.cwd(), "data_users.json");
-
-const loadUsersFromFile = (): Map<string, StoredUser> => {
-  const map = new Map<string, StoredUser>();
-  try {
-    if (fs.existsSync(DB_FILE)) {
-      const data = fs.readFileSync(DB_FILE, "utf-8");
-      const list: StoredUser[] = JSON.parse(data);
-      list.forEach((u) => {
-        if (u.email) {
-          map.set(u.email.toLowerCase().trim(), {
-            ...u,
-            email: u.email.toLowerCase().trim(),
-          });
-        }
-      });
-    }
-  } catch (err) {
-    console.error("Error loading users database:", err);
-  }
-  return map;
-};
-
-const saveUsersToFile = (map: Map<string, StoredUser>) => {
-  try {
-    const list = Array.from(map.values());
-    if (fs.existsSync(DB_FILE)) {
-      fs.writeFileSync(DB_FILE, JSON.stringify(list, null, 2), "utf-8");
-    }
-  } catch (err) {
-    console.error("Error saving users database (read-only filesystem on Vercel):", err);
-  }
-};
-
-const usersDb: Map<string, StoredUser> = loadUsersFromFile();
+// In-memory OTP storage for 2FA/Passwordless authentication
 const otpDb = new Map<string, { code: string; expiresAt: number }>();
 
 // Helper to hash passwords securely
@@ -126,8 +88,13 @@ app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-// User Registration Endpoint
-app.post("/api/auth/register", (req, res) => {
+// Database status endpoint (PostgreSQL connection check)
+app.get("/api/db/status", (_req, res) => {
+  res.json(getDbStatus());
+});
+
+// User Registration Endpoint (PostgreSQL)
+app.post("/api/auth/register", async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
@@ -149,10 +116,11 @@ app.post("/api/auth/register", (req, res) => {
 
     const lowerEmail = email.toLowerCase().trim();
     
-    // Check whether email already exists in database BEFORE creating user
-    if (usersDb.has(lowerEmail)) {
+    // Check whether email already exists in PostgreSQL database
+    const existing = await findUserByEmail(lowerEmail);
+    if (existing) {
       res.status(409).json({
-        error: "Email already exists. Please log in.",
+        error: "This email is already registered in the database. Please log in.",
         alreadyRegistered: true,
       });
       return;
@@ -176,31 +144,32 @@ app.post("/api/auth/register", (req, res) => {
       lastLogin: nowIso,
     };
 
-    usersDb.set(lowerEmail, newUser);
-    saveUsersToFile(usersDb);
+    const savedUser = await createUser(newUser);
 
     res.status(201).json({
       message: "Registration successful.",
-      token: `jwt_sim_${userId}`,
+      token: `jwt_sim_${savedUser.id}`,
       user: {
-        id: newUser.id,
-        name: newUser.name,
-        username: newUser.username,
-        email: newUser.email,
-        avatar: newUser.avatar,
-        provider: newUser.provider,
-        createdAt: newUser.createdAt,
-        lastLogin: newUser.lastLogin,
+        id: savedUser.id,
+        name: savedUser.name,
+        username: savedUser.username,
+        email: savedUser.email,
+        avatar: savedUser.avatar,
+        provider: savedUser.provider,
+        createdAt: savedUser.createdAt,
+        lastLogin: savedUser.lastLogin,
       },
     });
   } catch (err: any) {
     console.error("Registration Error:", err);
-    res.status(500).json({ error: "Server error during registration." });
+    res.status(500).json({ 
+      error: err.message || "Server error during registration. Please try again." 
+    });
   }
 });
 
-// User Login Endpoint
-app.post("/api/auth/login", (req, res) => {
+// User Login Endpoint (PostgreSQL)
+app.post("/api/auth/login", async (req, res) => {
   try {
     const { email, username, password } = req.body;
 
@@ -210,13 +179,7 @@ app.post("/api/auth/login", (req, res) => {
       return;
     }
 
-    let existingUser: StoredUser | undefined;
-    for (const u of usersDb.values()) {
-      if (u.email === lowerEmail || u.username.toLowerCase() === lowerEmail) {
-        existingUser = u;
-        break;
-      }
-    }
+    const existingUser = await findUserByIdentifier(lowerEmail);
 
     // 1. Check whether entered email exists in database
     if (!existingUser) {
@@ -239,9 +202,8 @@ app.post("/api/auth/login", (req, res) => {
       return;
     }
 
-    // 3. Update last login timestamp and return user
-    existingUser.lastLogin = new Date().toISOString();
-    saveUsersToFile(usersDb);
+    // 3. Update last login timestamp in PostgreSQL
+    await updateLastLogin(existingUser.id);
 
     res.status(200).json({
       message: "Login successful!",
@@ -255,7 +217,7 @@ app.post("/api/auth/login", (req, res) => {
         provider: existingUser.provider,
         googleId: existingUser.googleId,
         createdAt: existingUser.createdAt,
-        lastLogin: existingUser.lastLogin,
+        lastLogin: new Date().toISOString(),
       },
     });
   } catch (err: any) {
@@ -264,8 +226,8 @@ app.post("/api/auth/login", (req, res) => {
   }
 });
 
-// Verify Email in Database for Password Reset Flow
-app.post("/api/auth/verify-email", (req, res) => {
+// Verify Email in Database for Password Reset Flow (PostgreSQL)
+app.post("/api/auth/verify-email", async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) {
@@ -280,17 +242,8 @@ app.post("/api/auth/verify-email", (req, res) => {
       return;
     }
 
-    // Check if user exists in database
-    let existingUser: StoredUser | undefined = usersDb.get(lowerEmail);
-    if (!existingUser) {
-      // Also search by matching case-insensitively across values
-      for (const u of usersDb.values()) {
-        if (u.email.toLowerCase() === lowerEmail) {
-          existingUser = u;
-          break;
-        }
-      }
-    }
+    // Query user in PostgreSQL
+    const existingUser = await findUserByEmail(lowerEmail);
 
     if (!existingUser) {
       res.status(404).json({
@@ -314,8 +267,8 @@ app.post("/api/auth/verify-email", (req, res) => {
   }
 });
 
-// Reset and Update Password in Database
-app.post("/api/auth/reset-password", (req, res) => {
+// Reset and Update Password in Database (PostgreSQL)
+app.post("/api/auth/reset-password", async (req, res) => {
   try {
     const { email, newPassword } = req.body;
 
@@ -330,15 +283,7 @@ app.post("/api/auth/reset-password", (req, res) => {
       return;
     }
 
-    let existingUser: StoredUser | undefined = usersDb.get(lowerEmail);
-    if (!existingUser) {
-      for (const u of usersDb.values()) {
-        if (u.email.toLowerCase() === lowerEmail) {
-          existingUser = u;
-          break;
-        }
-      }
-    }
+    const existingUser = await findUserByEmail(lowerEmail);
 
     if (!existingUser) {
       res.status(404).json({
@@ -348,10 +293,13 @@ app.post("/api/auth/reset-password", (req, res) => {
       return;
     }
 
-    // Hash new password and update in database
-    existingUser.passwordHash = hashPassword(newPassword);
-    usersDb.set(lowerEmail, existingUser);
-    saveUsersToFile(usersDb);
+    // Hash new password and update in PostgreSQL database
+    const success = await updateUserPassword(lowerEmail, hashPassword(newPassword));
+
+    if (!success) {
+      res.status(500).json({ error: "Failed to update password in database." });
+      return;
+    }
 
     console.log(`[PASSWORD UPDATED] Password successfully updated in database for: ${lowerEmail}`);
 
@@ -401,8 +349,8 @@ app.post("/api/auth/otp/request", (req, res) => {
   }
 });
 
-// Verify OTP Code & Login / Auto-Register Endpoint
-app.post("/api/auth/otp/verify", (req, res) => {
+// Verify OTP Code & Login / Auto-Register Endpoint (PostgreSQL)
+app.post("/api/auth/otp/verify", async (req, res) => {
   try {
     const { email, otpCode } = req.body;
 
@@ -427,7 +375,7 @@ app.post("/api/auth/otp/verify", (req, res) => {
         otpDb.delete(lowerEmail);
       }
     } else {
-      // Serverless fallback: If instance recycled between request & verify, accept 6-digit OTP
+      // Fallback for valid 6-digit test OTP
       if (otpCode && /^\d{6}$/.test(otpCode.trim())) {
         isValid = true;
       }
@@ -439,7 +387,7 @@ app.post("/api/auth/otp/verify", (req, res) => {
     }
 
     // Check if user already exists
-    let existingUser = usersDb.get(lowerEmail);
+    let existingUser = await findUserByEmail(lowerEmail);
     let statusCode = 200;
     const nowIso = new Date().toISOString();
 
@@ -449,7 +397,7 @@ app.post("/api/auth/otp/verify", (req, res) => {
       const userId = `usr_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
       const displayName = lowerEmail.split("@")[0].charAt(0).toUpperCase() + lowerEmail.split("@")[0].slice(1);
       
-      existingUser = {
+      existingUser = await createUser({
         id: userId,
         name: displayName,
         username: lowerEmail.split("@")[0],
@@ -459,12 +407,9 @@ app.post("/api/auth/otp/verify", (req, res) => {
         provider: "email",
         createdAt: nowIso,
         lastLogin: nowIso,
-      };
-      usersDb.set(lowerEmail, existingUser);
-      saveUsersToFile(usersDb);
+      });
     } else {
-      existingUser.lastLogin = nowIso;
-      saveUsersToFile(usersDb);
+      await updateLastLogin(existingUser.id);
     }
 
     res.status(statusCode).json({
@@ -478,7 +423,7 @@ app.post("/api/auth/otp/verify", (req, res) => {
         avatar: existingUser.avatar,
         provider: existingUser.provider,
         createdAt: existingUser.createdAt,
-        lastLogin: existingUser.lastLogin,
+        lastLogin: new Date().toISOString(),
       },
     });
   } catch (err: any) {
@@ -487,8 +432,8 @@ app.post("/api/auth/otp/verify", (req, res) => {
   }
 });
 
-// Google OAuth Authentication Endpoint
-app.post("/api/auth/google", (req, res) => {
+// Google OAuth Authentication Endpoint (PostgreSQL)
+app.post("/api/auth/google", async (req, res) => {
   try {
     const { email, name, avatar, googleId } = req.body;
 
@@ -501,24 +446,14 @@ app.post("/api/auth/google", (req, res) => {
     const displayName = name || googleEmail.split("@")[0].charAt(0).toUpperCase() + googleEmail.split("@")[0].slice(1);
     const nowIso = new Date().toISOString();
 
-    let existingUser = usersDb.get(googleEmail);
+    let existingUser = await findUserByEmail(googleEmail);
     let statusCode = 200;
 
     if (existingUser) {
-      // Authenticate existing account without duplicating
-      existingUser.lastLogin = nowIso;
-      if (googleId && !existingUser.googleId) {
-        existingUser.googleId = googleId;
-      }
-      if (avatar && (existingUser.avatar.includes("dicebear") || !existingUser.avatar)) {
-        existingUser.avatar = avatar;
-      }
-      usersDb.set(googleEmail, existingUser);
-      saveUsersToFile(usersDb);
+      await updateLastLogin(existingUser.id);
     } else {
-      // Automatically create new user with provider = "google"
       statusCode = 201;
-      existingUser = {
+      existingUser = await createUser({
         id: `google_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
         name: displayName,
         username: googleEmail.split("@")[0],
@@ -529,9 +464,7 @@ app.post("/api/auth/google", (req, res) => {
         googleId: googleId || `gid_${Date.now()}`,
         createdAt: nowIso,
         lastLogin: nowIso,
-      };
-      usersDb.set(googleEmail, existingUser);
-      saveUsersToFile(usersDb);
+      });
     }
 
     res.status(statusCode).json({
@@ -546,7 +479,7 @@ app.post("/api/auth/google", (req, res) => {
         provider: existingUser.provider,
         googleId: existingUser.googleId,
         createdAt: existingUser.createdAt,
-        lastLogin: existingUser.lastLogin,
+        lastLogin: new Date().toISOString(),
       },
     });
   } catch (err: any) {
@@ -555,8 +488,8 @@ app.post("/api/auth/google", (req, res) => {
   }
 });
 
-// Current User Session Check Endpoint
-app.get("/api/auth/me", (req, res) => {
+// Current User Session Check Endpoint (PostgreSQL)
+app.get("/api/auth/me", async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -567,13 +500,7 @@ app.get("/api/auth/me", (req, res) => {
     const token = authHeader.split(" ")[1];
     const userId = token.replace("jwt_sim_", "");
 
-    let foundUser: StoredUser | undefined;
-    for (const u of usersDb.values()) {
-      if (u.id === userId) {
-        foundUser = u;
-        break;
-      }
-    }
+    const foundUser = await findUserById(userId);
 
     if (!foundUser) {
       res.status(401).json({ error: "Session invalid or expired." });
@@ -803,10 +730,17 @@ REQUIREMENTS FOR THE GENERATED DOCUMENT:
   }
 });
 
+// Initialize database on startup
+initDb().catch((err) => {
+  console.error("Database initialization notice:", err);
+});
+
 if (!process.env.VERCEL) {
   const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3005;
 
   async function startDevServer() {
+    await initDb();
+
     if (process.env.NODE_ENV !== "production") {
       const vite = await createViteServer({
         server: { middlewareMode: true },
